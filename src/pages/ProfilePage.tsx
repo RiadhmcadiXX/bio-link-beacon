@@ -14,6 +14,7 @@ interface Profile {
   display_name: string | null;
   bio: string | null;
   profile_image: string | null;
+  avatar_url: string | null;
   theme: string | null;
 }
 
@@ -152,7 +153,10 @@ const ProfilePage = () => {
         {/* Profile Header */}
         <div className="flex flex-col items-center mb-8">
           <Avatar className="h-24 w-24 mb-4">
-            <AvatarImage src={profile.profile_image || undefined} alt={profile.display_name || profile.username} />
+            <AvatarImage 
+              src={profile.avatar_url || profile.profile_image || undefined} 
+              alt={profile.display_name || profile.username} 
+            />
             <AvatarFallback>
               {(profile.display_name || profile.username).substring(0, 2).toUpperCase()}
             </AvatarFallback>

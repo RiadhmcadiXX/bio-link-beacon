@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { Link2, Pencil, Trash2, Copy, ExternalLink, Settings, BarChart3 } from "
 import { DashboardNav } from "@/components/DashboardNav";
 import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
+import { AvatarUpload } from "@/components/AvatarUpload";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ interface Profile {
   display_name: string | null;
   bio: string | null;
   profile_image: string | null;
+  avatar_url: string | null;
   theme: string;
   created_at: string;
 }
@@ -214,7 +215,16 @@ const Dashboard = () => {
     }
   };
 
-  if (isProfileLoading || isLinksLoading) {
+  const handleAvatarUpdate = (url: string) => {
+    if (profileData) {
+      queryClient.setQueryData(['profile', user?.id], {
+        ...profileData,
+        avatar_url: url
+      });
+    }
+  };
+
+  if (isProfileLoading) {
     return (
       <div className="min-h-screen flex bg-gray-50">
         <DashboardNav />
@@ -340,6 +350,18 @@ const Dashboard = () => {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="space-y-6">
+                      {/* Profile Picture Upload */}
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">Profile Picture</h3>
+                        <div className="flex justify-center py-4">
+                          <AvatarUpload 
+                            userId={profileData.id} 
+                            existingUrl={profileData.avatar_url} 
+                            onAvatarUpdate={handleAvatarUpdate}
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <h3 className="text-lg font-medium">Profile Information</h3>
                         <div className="grid gap-4">
