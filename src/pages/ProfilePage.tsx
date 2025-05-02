@@ -171,7 +171,7 @@ const ProfilePage = () => {
               <ProfileLink 
                 key={link.id} 
                 link={link} 
-                themeColor={profile.theme} 
+                themeColor={profile.theme || 'purple'} 
                 onClick={() => handleLinkClick(link.id)} 
               />
             ))
