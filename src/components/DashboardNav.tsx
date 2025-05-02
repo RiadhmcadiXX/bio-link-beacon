@@ -24,7 +24,12 @@ export const DashboardNav = () => {
       {/* Nav Menu */}
       <div className="space-y-1">
         <NavItem href="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" />
-        <NavItem href={`/${user?.username}`} icon={<Link2 className="h-5 w-5" />} text="My Profile" external />
+        <NavItem 
+          href={user?.username ? `/${user.username}` : '/'} 
+          icon={<Link2 className="h-5 w-5" />} 
+          text="My Profile" 
+          external 
+        />
         <NavItem href="/settings" icon={<Settings className="h-5 w-5" />} text="Account Settings" />
       </div>
 
@@ -34,7 +39,7 @@ export const DashboardNav = () => {
           <div className="w-8 h-8 rounded-full bg-gray-200 mr-3"></div>
           <div>
             <p className="font-medium text-sm">{user?.email}</p>
-            <p className="text-xs text-gray-500">@{user?.username}</p>
+            <p className="text-xs text-gray-500">@{user?.username || 'username'}</p>
           </div>
         </div>
         <Button 

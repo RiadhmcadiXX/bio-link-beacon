@@ -5,8 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
+// Define an extended user type to include username
+interface ExtendedUser extends User {
+  username?: string;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -32,7 +37,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -40,9 +45,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession);
-        setUser(newSession?.user ?? null);
+        
+        // Fetch user profile data if signed in
+        if (newSession?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', newSession.user.id)
+            .single();
+            
+          // Extend the user object with the username
+          const extendedUser: ExtendedUser = {
+            ...newSession.user,
+            username: profile?.username
+          };
+          
+          setUser(extendedUser);
+        } else {
+          setUser(null);
+        }
         
         if (event === 'SIGNED_IN') {
           toast.success("Signed in successfully");
@@ -53,9 +76,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Fetch user profile when initializing
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+          
+        // Extend the user object with the username
+        const extendedUser: ExtendedUser = {
+          ...session.user,
+          username: profile?.username
+        };
+        
+        setUser(extendedUser);
+      } else {
+        setUser(null);
+      }
+      
       setIsLoading(false);
     });
 
