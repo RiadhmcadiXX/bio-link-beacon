@@ -70,8 +70,8 @@ const ProfilePage = () => {
     enabled: !!profile,
   });
 
-  // Update link clicks - explicitly define the string type parameter
-  const updateLinkClicks = useMutation<void, Error, string>({
+  // Update link clicks
+  const updateLinkClicks = useMutation({
     mutationFn: async (linkId: string) => {
       // Directly fetch and update the clicks count
       const { data: linkData, error: fetchError } = await supabase
@@ -172,7 +172,7 @@ const ProfilePage = () => {
               <ProfileLink 
                 key={link.id} 
                 link={link} 
-                themeColor={profile.theme || 'purple'} // Use default 'purple' if theme is null
+                themeColor={profile.theme || 'purple'} 
                 onClick={() => handleLinkClick(link.id)} 
               />
             ))
