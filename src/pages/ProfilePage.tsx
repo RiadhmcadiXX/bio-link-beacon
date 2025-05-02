@@ -70,34 +70,27 @@ const ProfilePage = () => {
     enabled: !!profile,
   });
 
-  // Update link clicks - use a different approach to avoid type issues
-  const updateLinkClicks = useMutation({
+  // Update link clicks - explicitly define the string type parameter
+  const updateLinkClicks = useMutation<void, Error, string>({
     mutationFn: async (linkId: string) => {
-      try {
-        // Try using RPC first
-        const { error: rpcError } = await supabase.rpc('increment_link_click', { 
-          link_id: linkId 
-        });
-        
-        // Fallback method if RPC doesn't exist
-        if (rpcError) {
-          const { data: linkData } = await supabase
-            .from('links')
-            .select('clicks')
-            .eq('id', linkId)
-            .single();
-          
-          if (linkData) {
-            await supabase
-              .from('links')
-              .update({ clicks: (linkData.clicks || 0) + 1 })
-              .eq('id', linkId);
-          }
-        }
-      } catch (error) {
-        console.error("Error updating link clicks:", error);
+      // Directly fetch and update the clicks count
+      const { data: linkData, error: fetchError } = await supabase
+        .from('links')
+        .select('clicks')
+        .eq('id', linkId)
+        .single();
+  
+      if (fetchError) throw fetchError;
+  
+      if (linkData) {
+        const { error: updateError } = await supabase
+          .from('links')
+          .update({ clicks: (linkData.clicks || 0) + 1 })
+          .eq('id', linkId);
+  
+        if (updateError) throw updateError;
       }
-    }
+    },
   });
 
   // Function to handle link clicks
