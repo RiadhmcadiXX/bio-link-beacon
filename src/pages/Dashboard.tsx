@@ -11,78 +11,241 @@ import { DashboardNav } from "@/components/DashboardNav";
 import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Temporary mock data
-const MOCK_USER = {
-  id: "123",
-  username: "johndoe",
-  displayName: "John Doe",
-  bio: "Digital creator & web developer",
-  profileImage: "https://i.pravatar.cc/300",
-  theme: "purple",
-  createdAt: "2023-05-10"
-};
+// Define types for our data
+interface Profile {
+  id: string;
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  profile_image: string | null;
+  theme: string;
+  created_at: string;
+}
 
-const MOCK_LINKS = [
-  { id: "1", title: "My Portfolio", url: "https://portfolio.example.com", icon: "link", clicks: 42 },
-  { id: "2", title: "Follow me on Twitter", url: "https://twitter.com/example", icon: "twitter", clicks: 25 },
-  { id: "3", title: "My YouTube Channel", url: "https://youtube.com/c/example", icon: "youtube", clicks: 17 },
-];
+interface Link {
+  id: string;
+  user_id: string;
+  title: string;
+  url: string;
+  icon: string;
+  clicks: number;
+  created_at: string;
+}
 
 const Dashboard = () => {
   const { user } = useAuthContext();
-  const [links, setLinks] = useState(MOCK_LINKS);
-  const [profileData, setProfileData] = useState(MOCK_USER);
-  const [editingLink, setEditingLink] = useState<any>(null);
+  const [editingLink, setEditingLink] = useState<Partial<Link> | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Get profile data
+  const { 
+    data: profileData, 
+    isLoading: isProfileLoading,
+    error: profileError
+  } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data as Profile;
+    },
+    enabled: !!user,
+  });
+
+  // Get links data
+  const { 
+    data: links, 
+    isLoading: isLinksLoading,
+    error: linksError
+  } = useQuery({
+    queryKey: ['links', user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+      const { data, error } = await supabase
+        .from('links')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Link[];
+    },
+    enabled: !!user,
+  });
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updatedProfile: Partial<Profile>) => {
+      if (!user) throw new Error("Not authenticated");
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatedProfile)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      return updatedProfile;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      toast.success("Profile updated successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+    }
+  });
+
+  // Link mutations
+  const saveLink = useMutation({
+    mutationFn: async (link: Partial<Link>) => {
+      if (!user) throw new Error("Not authenticated");
+      
+      if (link.id) {
+        // Update existing link
+        const { error } = await supabase
+          .from('links')
+          .update({
+            title: link.title,
+            url: link.url,
+            icon: link.icon,
+          })
+          .eq('id', link.id)
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Add new link
+        const { error } = await supabase
+          .from('links')
+          .insert({
+            title: link.title,
+            url: link.url,
+            icon: link.icon || 'link',
+            user_id: user.id,
+          });
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+      setIsDialogOpen(false);
+      toast.success(editingLink?.id ? "Link updated successfully!" : "Link added successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to save link:", error);
+      toast.error("Failed to save link");
+    }
+  });
+
+  const deleteLink = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error("Not authenticated");
+      
+      const { error } = await supabase
+        .from('links')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+      toast.success("Link deleted successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to delete link:", error);
+      toast.error("Failed to delete link");
+    }
+  });
 
   // Get profile URL for sharing
-  const profileUrl = `${window.location.origin}/${profileData.username}`;
+  const profileUrl = profileData ? `${window.location.origin}/${profileData.username}` : '';
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(profileUrl);
-    toast.success("Profile link copied to clipboard!");
+    if (profileUrl) {
+      navigator.clipboard.writeText(profileUrl);
+      toast.success("Profile link copied to clipboard!");
+    }
   };
 
   const handleAddLink = () => {
-    const newLink = {
-      id: `link-${Date.now()}`,
+    setEditingLink({
       title: "New Link",
       url: "",
-      icon: "link",
-      clicks: 0
-    };
-    setEditingLink(newLink);
+      icon: "link"
+    });
     setIsDialogOpen(true);
   };
 
-  const handleEditLink = (link: any) => {
+  const handleEditLink = (link: Link) => {
     setEditingLink(link);
     setIsDialogOpen(true);
   };
 
-  const handleSaveLink = (link: any) => {
-    if (editingLink.id) {
-      // Update existing link
-      setLinks(links.map(l => l.id === link.id ? link : l));
-      toast.success("Link updated successfully!");
-    } else {
-      // Add new link
-      setLinks([...links, { ...link, id: `link-${Date.now()}` }]);
-      toast.success("Link added successfully!");
-    }
-    setIsDialogOpen(false);
+  const handleSaveLink = (link: Partial<Link>) => {
+    saveLink.mutate(link);
   };
 
   const handleDeleteLink = (id: string) => {
-    setLinks(links.filter(link => link.id !== id));
-    toast.success("Link deleted successfully!");
+    deleteLink.mutate(id);
   };
 
   const handleSaveProfile = () => {
-    // In a real app, you'd update the user's profile in the backend
-    toast.success("Profile updated successfully!");
+    if (profileData) {
+      updateProfileMutation.mutate({
+        display_name: profileData.display_name,
+        bio: profileData.bio,
+        theme: profileData.theme,
+        username: profileData.username,
+      });
+    }
   };
+
+  if (isProfileLoading || isLinksLoading) {
+    return (
+      <div className="min-h-screen flex bg-gray-50">
+        <DashboardNav />
+        <div className="flex-1 p-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileError || linksError) {
+    return (
+      <div className="min-h-screen flex bg-gray-50">
+        <DashboardNav />
+        <div className="flex-1 p-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-red-500">Error loading data</h1>
+                <p className="text-gray-600 mt-2">Please try refreshing the page</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -99,18 +262,22 @@ const Dashboard = () => {
               <p className="text-gray-500">Manage your profile and links</p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-2">
-              <div className="px-3 py-1 bg-gray-100 rounded-md flex items-center">
-                <span className="text-sm text-gray-600 mr-2">{profileUrl}</span>
-                <Button variant="ghost" size="icon" onClick={handleCopyLink}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/${profileData.username}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View
-                </a>
-              </Button>
+              {profileData && (
+                <>
+                  <div className="px-3 py-1 bg-gray-100 rounded-md flex items-center">
+                    <span className="text-sm text-gray-600 mr-2">{profileUrl}</span>
+                    <Button variant="ghost" size="icon" onClick={handleCopyLink}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/${profileData.username}`} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      View
+                    </a>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -140,7 +307,7 @@ const Dashboard = () => {
                 Add New Link
               </Button>
 
-              {links.length === 0 ? (
+              {links && links.length === 0 ? (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <Link2 className="h-12 w-12 text-gray-300 mb-4" />
@@ -155,7 +322,7 @@ const Dashboard = () => {
                 </Card>
               ) : (
                 <div className="grid gap-3">
-                  {links.map((link) => (
+                  {links && links.map((link) => (
                     <LinkItem
                       key={link.id}
                       link={link}
@@ -169,76 +336,102 @@ const Dashboard = () => {
 
             {/* Appearance Tab */}
             <TabsContent value="appearance" className="space-y-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Profile Information</h3>
-                      <div className="grid gap-4">
-                        <div className="grid gap-1.5">
-                          <label htmlFor="displayName" className="text-sm font-medium">
-                            Display Name
-                          </label>
-                          <Input 
-                            id="displayName" 
-                            value={profileData.displayName} 
-                            onChange={(e) => setProfileData({...profileData, displayName: e.target.value})}
-                          />
-                        </div>
-                        <div className="grid gap-1.5">
-                          <label htmlFor="username" className="text-sm font-medium">
-                            Username
-                          </label>
-                          <Input 
-                            id="username" 
-                            value={profileData.username} 
-                            onChange={(e) => setProfileData({...profileData, username: e.target.value})}
-                            className="lowercase"
-                          />
-                          <p className="text-xs text-gray-500">
-                            This will be your profile URL: {window.location.origin}/{profileData.username}
-                          </p>
-                        </div>
-                        <div className="grid gap-1.5">
-                          <label htmlFor="bio" className="text-sm font-medium">
-                            Bio
-                          </label>
-                          <Textarea 
-                            id="bio" 
-                            value={profileData.bio} 
-                            onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                            placeholder="Tell the world about yourself"
-                            className="resize-none"
-                            rows={3}
-                          />
+              {profileData && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">Profile Information</h3>
+                        <div className="grid gap-4">
+                          <div className="grid gap-1.5">
+                            <label htmlFor="displayName" className="text-sm font-medium">
+                              Display Name
+                            </label>
+                            <Input 
+                              id="displayName" 
+                              value={profileData.display_name || ''}
+                              onChange={(e) => {
+                                queryClient.setQueryData(['profile', user?.id], {
+                                  ...profileData,
+                                  display_name: e.target.value
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="grid gap-1.5">
+                            <label htmlFor="username" className="text-sm font-medium">
+                              Username
+                            </label>
+                            <Input 
+                              id="username" 
+                              value={profileData.username}
+                              onChange={(e) => {
+                                queryClient.setQueryData(['profile', user?.id], {
+                                  ...profileData,
+                                  username: e.target.value
+                                });
+                              }}
+                              className="lowercase"
+                            />
+                            <p className="text-xs text-gray-500">
+                              This will be your profile URL: {window.location.origin}/{profileData.username}
+                            </p>
+                          </div>
+                          <div className="grid gap-1.5">
+                            <label htmlFor="bio" className="text-sm font-medium">
+                              Bio
+                            </label>
+                            <Textarea 
+                              id="bio" 
+                              value={profileData.bio || ''}
+                              onChange={(e) => {
+                                queryClient.setQueryData(['profile', user?.id], {
+                                  ...profileData,
+                                  bio: e.target.value
+                                });
+                              }}
+                              placeholder="Tell the world about yourself"
+                              className="resize-none"
+                              rows={3}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Theme</h3>
-                      <div className="flex space-x-3">
-                        {['purple', 'blue', 'pink', 'orange'].map(color => (
-                          <div 
-                            key={color}
-                            className={`w-8 h-8 rounded-full cursor-pointer ${
-                              color === 'purple' ? 'bg-brand-purple' : 
-                              color === 'blue' ? 'bg-brand-blue' : 
-                              color === 'pink' ? 'bg-brand-pink' : 
-                              'bg-brand-orange'
-                            } ${profileData.theme === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
-                            onClick={() => setProfileData({...profileData, theme: color})}
-                          />
-                        ))}
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">Theme</h3>
+                        <div className="flex space-x-3">
+                          {['purple', 'blue', 'pink', 'orange'].map(color => (
+                            <div 
+                              key={color}
+                              className={`w-8 h-8 rounded-full cursor-pointer ${
+                                color === 'purple' ? 'bg-brand-purple' : 
+                                color === 'blue' ? 'bg-brand-blue' : 
+                                color === 'pink' ? 'bg-brand-pink' : 
+                                'bg-brand-orange'
+                              } ${profileData.theme === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                              onClick={() => {
+                                queryClient.setQueryData(['profile', user?.id], {
+                                  ...profileData,
+                                  theme: color
+                                });
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    <Button onClick={handleSaveProfile} className="bg-brand-purple hover:bg-brand-purple/90">
-                      Save Changes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Button 
+                        onClick={handleSaveProfile} 
+                        className="bg-brand-purple hover:bg-brand-purple/90"
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Analytics Tab */}
@@ -255,20 +448,24 @@ const Dashboard = () => {
 
                     <div className="space-y-2">
                       <h3 className="text-lg font-medium">Top Performing Links</h3>
-                      <div className="space-y-2">
-                        {links.sort((a, b) => b.clicks - a.clicks).slice(0, 3).map((link) => (
-                          <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div>
-                              <p className="font-medium">{link.title}</p>
-                              <p className="text-sm text-gray-500 truncate max-w-[300px]">{link.url}</p>
+                      {links && links.length > 0 ? (
+                        <div className="space-y-2">
+                          {[...links].sort((a, b) => b.clicks - a.clicks).slice(0, 3).map((link) => (
+                            <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <p className="font-medium">{link.title}</p>
+                                <p className="text-sm text-gray-500 truncate max-w-[300px]">{link.url}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-medium">{link.clicks}</p>
+                                <p className="text-xs text-gray-500">clicks</p>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-medium">{link.clicks}</p>
-                              <p className="text-xs text-gray-500">clicks</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">No links to analyze yet</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>

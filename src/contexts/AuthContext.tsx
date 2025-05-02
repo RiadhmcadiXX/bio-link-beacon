@@ -1,15 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  email: string;
-  username: string;
-}
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -19,6 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
@@ -34,48 +33,49 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for stored user session on app load
-    const checkSession = async () => {
-      try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success("Signed in successfully");
+        } else if (event === 'SIGNED_OUT') {
+          toast.success("Signed out successfully");
         }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    );
 
-    checkSession();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // This is a mock implementation. In a real app, this would use Supabase Auth
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Mock successful login (in real app, validate with Supabase)
-      const mockUser = {
-        id: "123",
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        username: email.split('@')[0],
-      };
-
-      // Store user in local storage (temporary for our mock)
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
-      return Promise.resolve();
-    } catch (error) {
+        password,
+      });
+      
+      if (error) throw error;
+      navigate("/dashboard");
+    } catch (error: any) {
       console.error("Login error:", error);
-      return Promise.reject(error);
+      toast.error(error.message || "Failed to sign in");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -84,25 +84,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
     try {
-      // This is a mock implementation. In a real app, this would use Supabase Auth
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Mock successful signup (in real app, register with Supabase)
-      const mockUser = {
-        id: "123",
+      const { error } = await supabase.auth.signUp({
         email,
-        username,
-      };
-
-      // Store user in local storage (temporary for our mock)
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
-      return Promise.resolve();
-    } catch (error) {
+        password,
+        options: {
+          data: {
+            username,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      toast.success("Signed up successfully! Please check your email for verification.");
+    } catch (error: any) {
       console.error("Signup error:", error);
-      return Promise.reject(error);
+      toast.error(error.message || "Failed to sign up");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +108,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // This is a mock implementation. In a real app, this would sign out with Supabase Auth
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Clear user from local storage
-      localStorage.removeItem("user");
-      setUser(null);
-      toast.success("Logged out successfully");
-      return Promise.resolve();
-    } catch (error) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/");
+    } catch (error: any) {
       console.error("Logout error:", error);
-      return Promise.reject(error);
+      toast.error(error.message || "Failed to sign out");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +122,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
     user,
+    session,
     isAuthenticated: !!user,
     isLoading,
     login,

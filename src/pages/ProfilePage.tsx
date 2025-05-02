@@ -1,52 +1,106 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ExternalLink } from "lucide-react";
 import { ProfileLink } from "@/components/ProfileLink";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
-// Mock data - in real app would come from Supabase
-const MOCK_PROFILE = {
-  username: "johndoe",
-  displayName: "John Doe",
-  bio: "Digital creator & web developer",
-  profileImage: "https://i.pravatar.cc/300",
-  theme: "purple",
-  links: [
-    { id: "1", title: "My Portfolio", url: "https://portfolio.example.com", icon: "link", clicks: 42 },
-    { id: "2", title: "Follow me on Twitter", url: "https://twitter.com/example", icon: "twitter", clicks: 25 },
-    { id: "3", title: "My YouTube Channel", url: "https://youtube.com/c/example", icon: "youtube", clicks: 17 },
-  ]
-};
+interface Profile {
+  id: string;
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  profile_image: string | null;
+  theme: string;
+}
+
+interface Link {
+  id: string;
+  title: string;
+  url: string;
+  icon: string;
+  clicks: number;
+}
 
 const ProfilePage = () => {
-  const { username } = useParams();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
 
-  // In a real app, fetch profile data from Supabase based on the username
-  useEffect(() => {
-    // For now, use mock data
-    setTimeout(() => {
-      if (MOCK_PROFILE.username === username) {
-        setProfile(MOCK_PROFILE);
-        setLoading(false);
-      } else {
-        setError("Profile not found");
-        setLoading(false);
+  // Fetch profile data
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    error: profileError,
+  } = useQuery({
+    queryKey: ["profile", username],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("username", username)
+        .single();
+
+      if (error) throw error;
+      return data as Profile;
+    },
+  });
+
+  // Fetch links data
+  const {
+    data: links,
+    isLoading: linksLoading,
+    error: linksError,
+  } = useQuery({
+    queryKey: ["links", profile?.id],
+    queryFn: async () => {
+      if (!profile) return [];
+
+      const { data, error } = await supabase
+        .from("links")
+        .select("*")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Link[];
+    },
+    enabled: !!profile,
+  });
+
+  // Update link clicks
+  const updateLinkClicks = useMutation({
+    mutationFn: async (linkId: string) => {
+      const { error } = await supabase.rpc('increment_link_click', { link_id: linkId });
+      
+      // Fallback method if RPC doesn't exist
+      if (error) {
+        const { data: linkData } = await supabase
+          .from('links')
+          .select('clicks')
+          .eq('id', linkId)
+          .single();
+        
+        if (linkData) {
+          await supabase
+            .from('links')
+            .update({ clicks: (linkData.clicks || 0) + 1 })
+            .eq('id', linkId);
+        }
       }
-    }, 500);
-  }, [username]);
+    }
+  });
 
   // Function to handle link clicks
   const handleLinkClick = (linkId: string) => {
-    // In a real app, this would record the click in the database
-    console.log(`Link clicked: ${linkId}`);
+    updateLinkClicks.mutate(linkId);
   };
 
-  if (loading) {
+  const isLoading = profileLoading || (!profile && !profileError);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center space-y-6">
@@ -63,7 +117,7 @@ const ProfilePage = () => {
     );
   }
 
-  if (error) {
+  if (profileError || !profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-3xl font-bold mb-2">Profile Not Found</h1>
@@ -97,23 +151,35 @@ const ProfilePage = () => {
         {/* Profile Header */}
         <div className="flex flex-col items-center mb-8">
           <Avatar className="h-24 w-24 mb-4">
-            <AvatarImage src={profile.profileImage} alt={profile.displayName} />
-            <AvatarFallback>{profile.displayName.substring(0, 2)}</AvatarFallback>
+            <AvatarImage src={profile.profile_image || undefined} alt={profile.display_name || profile.username} />
+            <AvatarFallback>
+              {(profile.display_name || profile.username).substring(0, 2).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          <h1 className="text-2xl font-bold">{profile.displayName}</h1>
+          <h1 className="text-2xl font-bold">{profile.display_name || profile.username}</h1>
           {profile.bio && <p className="text-gray-600 text-center mt-2">{profile.bio}</p>}
         </div>
 
         {/* Links */}
         <div className="space-y-3">
-          {profile.links.map((link: any) => (
-            <ProfileLink 
-              key={link.id} 
-              link={link} 
-              themeColor={profile.theme} 
-              onClick={() => handleLinkClick(link.id)} 
-            />
-          ))}
+          {linksLoading ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+            ))
+          ) : links && links.length > 0 ? (
+            links.map((link) => (
+              <ProfileLink 
+                key={link.id} 
+                link={link} 
+                themeColor={profile.theme} 
+                onClick={() => handleLinkClick(link.id)} 
+              />
+            ))
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-gray-500">No links yet</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

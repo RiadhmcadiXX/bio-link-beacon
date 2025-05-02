@@ -1,1 +1,5 @@
+
 project_id = "xkglfoncbxrpyrdiekzu"
+
+[functions.increment_link_click]
+verify_jwt = true
