@@ -9,7 +9,7 @@ interface ProfileLinkProps {
     url: string;
     icon: string;
   };
-  themeColor: string;
+  themeColor: string; // Ensuring this accepts a string type
   onClick: () => void;
 }
 

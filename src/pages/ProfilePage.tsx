@@ -14,7 +14,7 @@ interface Profile {
   display_name: string | null;
   bio: string | null;
   profile_image: string | null;
-  theme: string;
+  theme: string | null;
 }
 
 interface Link {
