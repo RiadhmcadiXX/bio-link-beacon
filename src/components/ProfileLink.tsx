@@ -8,6 +8,7 @@ interface ProfileLinkProps {
     title: string;
     url: string;
     icon: string;
+    clicks?: number;
   };
   themeColor: string; // Ensuring this accepts a string type
   onClick: () => void;

@@ -70,25 +70,32 @@ const ProfilePage = () => {
     enabled: !!profile,
   });
 
-  // Update link clicks - explicitly define the string type parameter
-  const updateLinkClicks = useMutation<void, Error, string>({
+  // Update link clicks - use a different approach to avoid type issues
+  const updateLinkClicks = useMutation({
     mutationFn: async (linkId: string) => {
-      const { error } = await supabase.rpc('increment_link_click', { link_id: linkId });
-      
-      // Fallback method if RPC doesn't exist
-      if (error) {
-        const { data: linkData } = await supabase
-          .from('links')
-          .select('clicks')
-          .eq('id', linkId)
-          .single();
+      try {
+        // Try using RPC first
+        const { error: rpcError } = await supabase.rpc('increment_link_click', { 
+          link_id: linkId 
+        });
         
-        if (linkData) {
-          await supabase
+        // Fallback method if RPC doesn't exist
+        if (rpcError) {
+          const { data: linkData } = await supabase
             .from('links')
-            .update({ clicks: (linkData.clicks || 0) + 1 })
-            .eq('id', linkId);
+            .select('clicks')
+            .eq('id', linkId)
+            .single();
+          
+          if (linkData) {
+            await supabase
+              .from('links')
+              .update({ clicks: (linkData.clicks || 0) + 1 })
+              .eq('id', linkId);
+          }
         }
+      } catch (error) {
+        console.error("Error updating link clicks:", error);
       }
     }
   });
@@ -131,7 +138,8 @@ const ProfilePage = () => {
 
   // Theme styles based on user's preference
   const getThemeStyles = () => {
-    switch (profile.theme) {
+    const theme = profile.theme || 'purple'; // Provide a default if null
+    switch (theme) {
       case 'blue':
         return { background: 'bg-gradient-to-br from-blue-50 to-blue-100', button: 'bg-brand-blue hover:bg-brand-blue/90' };
       case 'pink':
@@ -171,7 +179,7 @@ const ProfilePage = () => {
               <ProfileLink 
                 key={link.id} 
                 link={link} 
-                themeColor={profile.theme || 'purple'} 
+                themeColor={profile.theme || 'purple'} // Use default 'purple' if theme is null
                 onClick={() => handleLinkClick(link.id)} 
               />
             ))
