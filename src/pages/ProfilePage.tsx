@@ -70,8 +70,8 @@ const ProfilePage = () => {
     enabled: !!profile,
   });
 
-  // Update link clicks
-  const updateLinkClicks = useMutation({
+  // Update link clicks - explicitly define the string type parameter
+  const updateLinkClicks = useMutation<void, Error, string>({
     mutationFn: async (linkId: string) => {
       const { error } = await supabase.rpc('increment_link_click', { link_id: linkId });
       
