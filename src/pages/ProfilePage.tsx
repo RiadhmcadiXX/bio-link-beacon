@@ -16,6 +16,7 @@ interface Profile {
   profile_image: string | null;
   avatar_url: string | null;
   theme: string | null;
+  template: string | null;
 }
 
 interface Link {
@@ -23,6 +24,7 @@ interface Link {
   title: string;
   url: string;
   icon: string;
+  linkType?: string;
   clicks: number;
 }
 
@@ -130,43 +132,131 @@ const ProfilePage = () => {
     );
   }
 
-  // Theme styles based on user's preference
-  const getThemeStyles = () => {
+  // Template styles
+  const getTemplateStyles = () => {
+    const template = profile.template || 'default';
     const theme = profile.theme || 'purple'; // Provide a default if null
+    
+    // Base theme color based on user preference
+    let themeColor;
     switch (theme) {
-      case 'blue':
-        return { background: 'bg-gradient-to-br from-blue-50 to-blue-100', button: 'bg-brand-blue hover:bg-brand-blue/90' };
-      case 'pink':
-        return { background: 'bg-gradient-to-br from-pink-50 to-pink-100', button: 'bg-brand-pink hover:bg-brand-pink/90' };
-      case 'orange':
-        return { background: 'bg-gradient-to-br from-orange-50 to-orange-100', button: 'bg-brand-orange hover:bg-brand-orange/90' };
-      default: // purple
-        return { background: 'bg-gradient-to-br from-purple-50 to-purple-100', button: 'bg-brand-purple hover:bg-brand-purple/90' };
+      case 'blue': themeColor = 'blue'; break;
+      case 'pink': themeColor = 'pink'; break;
+      case 'orange': themeColor = 'orange'; break;
+      default: themeColor = 'purple'; break;
+    }
+    
+    // Template-specific styles
+    switch (template) {
+      case 'minimal':
+        return { 
+          background: 'bg-white',
+          container: 'max-w-md mx-auto px-4 py-8',
+          avatar: 'h-16 w-16',
+          header: 'text-center mb-6',
+          title: 'text-xl font-semibold',
+          bio: 'text-sm text-gray-500',
+          links: 'space-y-2',
+          themeColor
+        };
+      case 'elegant-dark':
+        return { 
+          background: 'bg-gray-900',
+          container: 'max-w-md mx-auto px-6 py-10',
+          avatar: 'h-20 w-20 ring-2 ring-gray-800',
+          header: 'text-center mb-8 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-gray-400',
+          links: 'space-y-3',
+          themeColor: 'blue'
+        };
+      case 'gradient':
+        return { 
+          background: 'bg-gradient-to-br from-purple-500 to-pink-500',
+          container: 'max-w-md mx-auto px-5 py-8',
+          avatar: 'h-24 w-24 ring-4 ring-white/20',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          links: 'space-y-3',
+          themeColor: 'pink'
+        };
+      case 'bubbles':
+        return { 
+          background: 'bg-blue-50',
+          container: 'max-w-md mx-auto px-4 py-8',
+          avatar: 'h-20 w-20 border-4 border-blue-200',
+          header: 'text-center mb-8',
+          title: 'text-2xl font-bold text-blue-800',
+          bio: 'text-sm text-blue-600',
+          links: 'space-y-4',
+          themeColor: 'blue'
+        };
+      case 'modern':
+        return { 
+          background: 'bg-gray-100',
+          container: 'max-w-md mx-auto px-4 py-10',
+          avatar: 'h-24 w-24',
+          header: 'text-left mb-8 flex items-center gap-4',
+          title: 'text-xl font-bold',
+          bio: 'text-sm text-gray-600 mt-1',
+          links: 'space-y-3',
+          themeColor: 'orange'
+        };
+      default: // default template
+        return { 
+          background: profile.theme ? `bg-gradient-to-br from-${theme}-50 to-${theme}-100` : 'bg-gradient-to-br from-purple-50 to-purple-100',
+          container: 'max-w-md mx-auto px-4 py-8',
+          avatar: 'h-20 w-20',
+          header: 'text-center mb-6',
+          title: 'text-xl font-bold',
+          bio: 'text-gray-600 text-sm',
+          links: 'space-y-3',
+          themeColor
+        };
     }
   };
 
-  const themeStyles = getThemeStyles();
+  const templateStyles = getTemplateStyles();
 
   return (
-    <div className={`min-h-screen ${themeStyles.background} py-12 px-4`}>
-      <div className="max-w-md mx-auto">
+    <div className={`min-h-screen ${templateStyles.background} py-12 px-4`}>
+      <div className={templateStyles.container}>
         {/* Profile Header */}
-        <div className="flex flex-col items-center mb-8">
-          <Avatar className="h-24 w-24 mb-4">
-            <AvatarImage 
-              src={profile.avatar_url || profile.profile_image || undefined} 
-              alt={profile.display_name || profile.username} 
-            />
-            <AvatarFallback>
-              {(profile.display_name || profile.username).substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold">{profile.display_name || profile.username}</h1>
-          {profile.bio && <p className="text-gray-600 text-center mt-2">{profile.bio}</p>}
-        </div>
+        {templateStyles.header.includes('flex') ? (
+          <div className={templateStyles.header}>
+            <Avatar className={templateStyles.avatar}>
+              <AvatarImage 
+                src={profile.avatar_url || profile.profile_image || undefined} 
+                alt={profile.display_name || profile.username} 
+              />
+              <AvatarFallback>
+                {(profile.display_name || profile.username).substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className={templateStyles.title}>{profile.display_name || profile.username}</h1>
+              {profile.bio && <p className={templateStyles.bio}>{profile.bio}</p>}
+            </div>
+          </div>
+        ) : (
+          <div className={templateStyles.header}>
+            <Avatar className={`mx-auto mb-4 ${templateStyles.avatar}`}>
+              <AvatarImage 
+                src={profile.avatar_url || profile.profile_image || undefined} 
+                alt={profile.display_name || profile.username} 
+              />
+              <AvatarFallback>
+                {(profile.display_name || profile.username).substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <h1 className={templateStyles.title}>{profile.display_name || profile.username}</h1>
+            {profile.bio && <p className={`mt-2 ${templateStyles.bio}`}>{profile.bio}</p>}
+          </div>
+        )}
 
         {/* Links */}
-        <div className="space-y-3">
+        <div className={templateStyles.links}>
           {linksLoading ? (
             Array(3).fill(0).map((_, i) => (
               <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
@@ -176,7 +266,8 @@ const ProfilePage = () => {
               <ProfileLink 
                 key={link.id} 
                 link={link} 
-                themeColor={profile.theme || 'purple'} 
+                themeColor={templateStyles.themeColor}
+                template={profile.template || 'default'}
                 onClick={() => handleLinkClick(link.id)} 
               />
             ))

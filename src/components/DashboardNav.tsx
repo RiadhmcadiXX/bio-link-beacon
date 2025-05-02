@@ -1,89 +1,106 @@
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Link2, Settings, LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+import {
+  LayoutDashboard, 
+  Link2, 
+  LayoutTemplate,
+  Settings, 
+  BarChart3, 
+  LogOut,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const DashboardNav = () => {
-  const navigate = useNavigate();
   const { user, logout } = useAuthContext();
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
+  const navItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Templates",
+      href: "/templates",
+      icon: <LayoutTemplate className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: <BarChart3 className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: <Settings className="h-5 w-5 mr-3" />,
+    },
+  ];
+
+  // Function to get the first 2 characters of display name or email
+  const getAvatarFallback = () => {
+    if (!user) return "?";
+    return user.email ? user.email.substring(0, 2).toUpperCase() : "?";
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 hidden md:block p-6 space-y-8">
+    <div className="hidden md:flex border-r w-64 p-5 flex-col bg-white">
       {/* Logo */}
-      <div className="flex items-center">
-        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-hero-pattern">LinkBeacon</h1>
+      <div className="flex items-center mb-8">
+        <Link2 className="h-6 w-6 text-brand-purple mr-2" />
+        <span className="font-bold text-xl">LinkBeacon</span>
       </div>
 
-      {/* Nav Menu */}
-      <div className="space-y-1">
-        <NavItem href="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} text="Dashboard" />
-        <NavItem 
-          href={user?.username ? `/${user.username}` : '/'} 
-          icon={<Link2 className="h-5 w-5" />} 
-          text="My Profile" 
-          external 
-        />
-        <NavItem href="/settings" icon={<Settings className="h-5 w-5" />} text="Account Settings" />
+      {/* Navigation Links */}
+      <div className="flex-1">
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              className={({ isActive }) =>
+                `flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  isActive
+                    ? "bg-brand-purple/10 text-brand-purple"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              {item.icon}
+              {item.title}
+            </NavLink>
+          ))}
+        </nav>
       </div>
 
-      {/* User Info & Logout */}
-      <div className="mt-auto pt-6 border-t border-gray-100">
+      {/* User Profile & Logout */}
+      <div className="mt-auto pt-4 border-t">
         <div className="flex items-center mb-4">
-          <div className="w-8 h-8 rounded-full bg-gray-200 mr-3"></div>
+          <Avatar className="h-9 w-9 mr-3">
+            <AvatarImage
+              src={user?.user_metadata?.avatar_url || undefined}
+              alt={user?.email || "User profile"}
+            />
+            <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
+          </Avatar>
           <div>
-            <p className="font-medium text-sm">{user?.email}</p>
-            <p className="text-xs text-gray-500">@{user?.username || 'username'}</p>
+            <p className="text-sm font-medium">{user?.email}</p>
+            <p className="text-xs text-gray-500 truncate max-w-[150px]">
+              {user?.user_metadata?.username || user?.email}
+            </p>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          className="w-full justify-start text-gray-600"
-          onClick={handleLogout}
+        <Button
+          variant="outline"
+          className="w-full justify-start text-gray-700"
+          onClick={logout}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+          Log out
         </Button>
       </div>
     </div>
-  );
-};
-
-interface NavItemProps {
-  href: string;
-  icon: React.ReactNode;
-  text: string;
-  external?: boolean;
-}
-
-const NavItem = ({ href, icon, text, external }: NavItemProps) => {
-  if (external) {
-    return (
-      <a 
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 hover:text-brand-purple transition-colors"
-      >
-        {icon}
-        <span className="ml-3">{text}</span>
-      </a>
-    );
-  }
-
-  return (
-    <Link
-      to={href}
-      className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 hover:text-brand-purple transition-colors"
-    >
-      {icon}
-      <span className="ml-3">{text}</span>
-    </Link>
   );
 };

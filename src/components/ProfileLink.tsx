@@ -27,9 +27,10 @@ interface ProfileLinkProps {
   };
   themeColor: string;
   onClick: () => void;
+  template?: string;
 }
 
-export const ProfileLink = ({ link, themeColor, onClick }: ProfileLinkProps) => {
+export const ProfileLink = ({ link, themeColor, onClick, template = 'default' }: ProfileLinkProps) => {
   // Function to render icon based on link.icon
   const renderIcon = () => {
     switch (link.icon) {
@@ -84,14 +85,33 @@ export const ProfileLink = ({ link, themeColor, onClick }: ProfileLinkProps) => 
     return '';
   };
 
+  // Get template-specific styles
+  const getTemplateStyles = () => {
+    switch (template) {
+      case 'minimal':
+        return "bg-white shadow-sm border hover:shadow transition-shadow";
+      case 'elegant-dark':
+        return "bg-gray-800 text-white hover:bg-gray-700";
+      case 'gradient':
+        return "bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 text-white";
+      case 'bubbles':
+        return "bg-white rounded-full shadow-md hover:shadow-lg";
+      case 'modern':
+        return "bg-white shadow rounded-md hover:shadow-md border-l-4 border-gray-300";
+      default:
+        return ""; // Default style is already in the main classes
+    }
+  };
+
   const themeStyles = getThemeStyles();
+  const templateSpecificStyles = getTemplateStyles();
 
   return (
     <a 
       href={link.url} 
       target="_blank" 
       rel="noopener noreferrer" 
-      className={`block ${themeStyles.bg} ${getLinkTypeStyles()} rounded-lg p-4 transition-all duration-200 transform hover:scale-[1.01]`}
+      className={`block ${themeStyles.bg} ${getLinkTypeStyles()} ${templateSpecificStyles} rounded-lg p-4 transition-all duration-200 transform hover:scale-[1.01]`}
       onClick={(e) => {
         onClick();
         // Let the default navigation happen

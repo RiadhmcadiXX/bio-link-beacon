@@ -47,6 +47,7 @@ export type Database = {
           display_name: string | null
           id: string
           profile_image: string | null
+          template: string | null
           theme: string | null
           username: string
         }
@@ -57,6 +58,7 @@ export type Database = {
           display_name?: string | null
           id: string
           profile_image?: string | null
+          template?: string | null
           theme?: string | null
           username: string
         }
@@ -67,6 +69,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           profile_image?: string | null
+          template?: string | null
           theme?: string | null
           username?: string
         }
