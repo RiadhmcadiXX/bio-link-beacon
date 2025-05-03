@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,99 +46,98 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let mounted = true;
 
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log("Auth state changed:", event);
-        
-        if (!mounted) return;
-        
-        if (newSession) {
-          setSession(newSession);
-          
-          // Fetch user profile data if signed in
-          if (newSession.user) {
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', newSession.user.id)
-                .single();
-                
-              // Extend the user object with the username
-              if (mounted) {
-                const extendedUser: ExtendedUser = {
-                  ...newSession.user,
-                  username: profile?.username
-                };
-                
-                setUser(extendedUser);
-              }
-            } catch (error) {
-              console.error("Error fetching profile:", error);
-            }
-          }
-        } else {
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-          }
-        }
-        
-        if (event === 'SIGNED_IN' && mounted) {
-          toast.success("Signed in successfully");
-        } else if (event === 'SIGNED_OUT' && mounted) {
-          toast.success("Signed out successfully");
-        }
-        
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log("Auth state changed:", event);
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (!mounted) return;
 
-      if (currentSession) {
-        setSession(currentSession);
-        
-        // Fetch user profile if we have a session
-        if (currentSession.user) {
-          (async () => {
-  try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', currentSession.user.id)
-      .single();
+      if (newSession) {
+        setSession(newSession);
 
-    if (error) throw error;
+        // Fetch user profile data if signed in
+        if (newSession.user) {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", newSession.user.id)
+              .single();
 
-    if (mounted) {
-      setUser({
-        ...currentSession.user,
-        username: profile?.username
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-    if (mounted) {
-      setUser(currentSession.user); // fallback
-    }
-  } finally {
-    if (mounted) {
-      setIsLoading(false);
-    }
-  }
-})();
+            // Extend the user object with the username
+            if (mounted) {
+              const extendedUser: ExtendedUser = {
+                ...newSession.user,
+                username: profile?.username,
+              };
+
+              setUser(extendedUser);
+            }
+          } catch (error) {
+            console.error("Error fetching profile:", error);
+          }
         }
       } else {
         if (mounted) {
-          setIsLoading(false);
+          setSession(null);
+          setUser(null);
         }
       }
+
+      if (event === "SIGNED_IN" && mounted) {
+        toast.success("Signed in successfully");
+      } else if (event === "SIGNED_OUT" && mounted) {
+        toast.success("Signed out successfully");
+      }
+
+      if (mounted) {
+        setIsLoading(false);
+      }
     });
+
+    // THEN check for existing session
+    (async () => {
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!mounted) return;
+
+        if (sessionData?.session && sessionData.session.user) {
+          const currentUser = sessionData.session.user;
+          setSession(sessionData.session);
+
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", currentUser.id)
+            .single();
+
+          if (profileError) throw profileError;
+
+          if (mounted) {
+            setUser({
+              ...currentUser,
+              username: profile?.username || undefined,
+            });
+            setIsLoading(false);
+          }
+        } else {
+          // No valid session
+          throw new Error("No session or user");
+        }
+      } catch (err) {
+        console.warn("Session invalid or failed to load, forcing logout", err);
+        await supabase.auth.signOut(); // Clear broken session
+        if (mounted) {
+          setUser(null);
+          setSession(null);
+          setIsLoading(false);
+          navigate("/login"); // redirect to login
+        }
+      }
+    })();
 
     return () => {
       mounted = false;
@@ -154,7 +152,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         email,
         password,
       });
-      
+
       if (error) throw error;
       navigate("/dashboard");
     } catch (error: any) {
@@ -178,9 +176,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           },
         },
       });
-      
+
       if (error) throw error;
-      toast.success("Signed up successfully! Please check your email for verification.");
+      toast.success(
+        "Signed up successfully! Please check your email for verification."
+      );
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || "Failed to sign up");
@@ -215,6 +215,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
   };
 
-  console.log("Auth provider rendering with state:", { isAuthenticated: !!user, isLoading });
+  console.log("Auth provider rendering with state:", {
+    isAuthenticated: !!user,
+    isLoading,
+  });
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
