@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
-// Extend user type with custom data
 interface ExtendedUser extends User {
   username?: string;
 }
@@ -37,27 +36,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check session and user on load
   useEffect(() => {
     let mounted = true;
 
-    // Force redirect if auth hangs too long
-    const maxWaitTimeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.warn("Auth timeout: redirecting to login");
-        setUser(null);
-        setSession(null);
-        setIsLoading(false);
-        navigate("/login");
-      }
-    }, 8000);
+    const checkSession = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentSession = sessionData?.session ?? null;
 
-    // Auth state listener
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
         if (!mounted) return;
 
-        setSession(session);
+        if (!currentSession || !currentSession.user) {
+          // Invalid session, force sign-out
+          console.warn("Invalid session: signing out");
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          navigate("/login");
+          return;
+        }
+
+        setSession(currentSession);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", currentSession.user.id)
+          .single();
+
+        const extendedUser: ExtendedUser = {
+          ...currentSession.user,
+          username: profile?.username ?? undefined,
+        };
+
+        setUser(extendedUser);
+      } catch (err) {
+        console.error("Error checking session", err);
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        navigate("/login");
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    // Auth change listener
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth event:", event);
+
+        if (!mounted) return;
+
         if (session?.user) {
           const { data: profile } = await supabase
             .from("profiles")
@@ -69,59 +99,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             ...session.user,
             username: profile?.username ?? undefined,
           });
+
+          setSession(session);
         } else {
           setUser(null);
+          setSession(null);
         }
 
         setIsLoading(false);
       }
     );
 
-    // Initial load
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-
-      if (!mounted) return;
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", session.user.id)
-          .single();
-
-        setUser({
-          ...session.user,
-          username: profile?.username ?? undefined,
-        });
-        setSession(session);
-      } else {
-        setUser(null);
-        setSession(null);
-      }
-
-      setIsLoading(false);
-    };
-
-    init();
+    checkSession();
 
     return () => {
       mounted = false;
-      clearTimeout(maxWaitTimeout);
-      listener?.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
-      toast.error("Login failed");
+      toast.error(error.message || "Login failed");
       throw error;
     }
-
     navigate("/dashboard");
     setIsLoading(false);
   };
@@ -137,11 +140,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
-      toast.error("Signup failed");
+      toast.error(error.message || "Signup failed");
       throw error;
     }
 
-    toast.success("Signup successful — check your email!");
+    toast.success("Check your email to verify.");
     setIsLoading(false);
   };
 
@@ -154,15 +157,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
   };
 
-  const value = {
-    user,
-    session,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    signup,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        signup,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
