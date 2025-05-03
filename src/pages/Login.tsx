@@ -10,7 +10,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuthContext();
+  const { login, isLoading: authLoading } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,13 +25,10 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would connect to Supabase Auth
       await login(email, password);
-      toast.success("Logged in successfully!");
-      navigate("/dashboard");
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Failed to login. Please check your credentials and try again.");
+      // Error handling is done in the login function
+      console.error("Login submission error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -85,9 +82,9 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-brand-purple hover:bg-brand-purple/90"
-                disabled={isLoading}
+                disabled={isLoading || authLoading}
               >
-                {isLoading ? "Logging in..." : "Sign In"}
+                {isLoading || authLoading ? "Logging in..." : "Sign In"}
               </Button>
               <p className="text-sm text-gray-500 mt-4 text-center">
                 Don't have an account?{" "}

@@ -110,6 +110,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          // Set session to expire after 1 hour of inactivity
+          expiresIn: 3600
+        }
       });
       
       if (error) throw error;
@@ -133,6 +137,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           data: {
             username,
           },
+          // Set session to expire after 1 hour of inactivity
+          expiresIn: 3600
         },
       });
       

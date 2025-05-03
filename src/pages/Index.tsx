@@ -2,9 +2,11 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout, isLoading } = useAuthContext();
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -14,12 +16,34 @@ const Index = () => {
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-hero-pattern">LinkBeacon</h1>
         </div>
         <div className="flex gap-4 items-center">
-          <Link to="/login" className="text-gray-600 hover:text-brand-purple transition-colors">
-            Log In
-          </Link>
-          <Button onClick={() => navigate("/signup")} className="bg-brand-purple hover:bg-brand-purple/90">
-            Sign Up
-          </Button>
+          {isLoading ? (
+            <div className="w-24 h-9 animate-pulse bg-gray-200 rounded-md"></div>
+          ) : isAuthenticated ? (
+            <>
+              <Button
+                onClick={() => navigate("/dashboard")}
+                variant="outline"
+                className="text-gray-600 hover:text-brand-purple transition-colors"
+              >
+                Dashboard
+              </Button>
+              <Button
+                onClick={logout}
+                className="bg-brand-purple hover:bg-brand-purple/90"
+              >
+                Log Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-gray-600 hover:text-brand-purple transition-colors">
+                Log In
+              </Link>
+              <Button onClick={() => navigate("/signup")} className="bg-brand-purple hover:bg-brand-purple/90">
+                Sign Up
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -33,8 +57,12 @@ const Index = () => {
             Connect your audience to everything you share. Create a customizable page for all your links, and manage them in one place.
           </p>
           <div className="pt-4">
-            <Button onClick={() => navigate("/signup")} size="lg" className="bg-brand-purple hover:bg-brand-purple/90 text-white">
-              Get Started for Free
+            <Button 
+              onClick={() => navigate(isAuthenticated ? "/dashboard" : "/signup")} 
+              size="lg" 
+              className="bg-brand-purple hover:bg-brand-purple/90 text-white"
+            >
+              {isAuthenticated ? "Go to Dashboard" : "Get Started for Free"}
             </Button>
           </div>
         </div>
