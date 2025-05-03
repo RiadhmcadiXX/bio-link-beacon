@@ -9,7 +9,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout, isLoading } = useAuthContext();
   
-}
   
   console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
   
