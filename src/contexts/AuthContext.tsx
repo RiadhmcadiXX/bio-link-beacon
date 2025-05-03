@@ -52,6 +52,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("Auth state changed:", event);
         
         if (!mounted) return;
+
+        console.log("Session exists but user is null?", session, user);
         
         if (newSession) {
           setSession(newSession);

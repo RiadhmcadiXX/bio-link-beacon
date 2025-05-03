@@ -37,7 +37,7 @@ interface Link {
 }
 
 const Dashboard = () => {
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   const [editingLink, setEditingLink] = useState<Partial<Link> | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
