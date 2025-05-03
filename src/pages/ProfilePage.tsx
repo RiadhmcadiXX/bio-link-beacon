@@ -1,9 +1,7 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ExternalLink } from "lucide-react";
 import { ProfileLink } from "@/components/ProfileLink";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -17,6 +15,8 @@ interface Profile {
   avatar_url: string | null;
   theme: string | null;
   template: string | null;
+  button_style: string | null;
+  font_family: string | null;
 }
 
 interface Link {
@@ -30,7 +30,6 @@ interface Link {
 
 const ProfilePage = () => {
   const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
 
   // Fetch profile data
   const {
@@ -125,9 +124,6 @@ const ProfilePage = () => {
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-3xl font-bold mb-2">Profile Not Found</h1>
         <p className="text-gray-600 mb-6">The profile you're looking for doesn't seem to exist.</p>
-        <Button asChild className="bg-brand-purple hover:bg-brand-purple/90">
-          <a href="/">Back to Home</a>
-        </Button>
       </div>
     );
   }
@@ -157,7 +153,9 @@ const ProfilePage = () => {
           title: 'text-xl font-semibold',
           bio: 'text-sm text-gray-500',
           links: 'space-y-2',
-          themeColor
+          themeColor,
+          buttonStyle: profile.button_style || 'minimal',
+          fontFamily: profile.font_family || 'default'
         };
       case 'elegant-dark':
         return { 
@@ -168,7 +166,9 @@ const ProfilePage = () => {
           title: 'text-2xl font-bold',
           bio: 'text-sm text-gray-400',
           links: 'space-y-3',
-          themeColor: 'blue'
+          themeColor: 'blue',
+          buttonStyle: profile.button_style || 'outline',
+          fontFamily: profile.font_family || 'serif'
         };
       case 'gradient':
         return { 
@@ -179,7 +179,9 @@ const ProfilePage = () => {
           title: 'text-2xl font-bold',
           bio: 'text-sm text-white/80',
           links: 'space-y-3',
-          themeColor: 'pink'
+          themeColor: 'pink',
+          buttonStyle: profile.button_style || 'gradient',
+          fontFamily: profile.font_family || 'display'
         };
       case 'bubbles':
         return { 
@@ -190,7 +192,9 @@ const ProfilePage = () => {
           title: 'text-2xl font-bold text-blue-800',
           bio: 'text-sm text-blue-600',
           links: 'space-y-4',
-          themeColor: 'blue'
+          themeColor: 'blue',
+          buttonStyle: profile.button_style || 'rounded',
+          fontFamily: profile.font_family || 'handwritten'
         };
       case 'modern':
         return { 
@@ -201,7 +205,27 @@ const ProfilePage = () => {
           title: 'text-xl font-bold',
           bio: 'text-sm text-gray-600 mt-1',
           links: 'space-y-3',
-          themeColor: 'orange'
+          themeColor: 'orange',
+          buttonStyle: profile.button_style || 'shadow',
+          fontFamily: profile.font_family || 'mono'
+        };
+      case 'custom':
+        return { 
+          background: `bg-gradient-to-br ${
+            theme === 'purple' ? 'from-purple-100 to-purple-200' :
+            theme === 'blue' ? 'from-blue-100 to-blue-200' :
+            theme === 'pink' ? 'from-pink-100 to-pink-200' :
+            'from-orange-100 to-orange-200'
+          }`,
+          container: 'max-w-md mx-auto px-4 py-8',
+          avatar: 'h-20 w-20',
+          header: 'text-center mb-6',
+          title: 'text-xl font-bold',
+          bio: 'text-gray-600 text-sm',
+          links: 'space-y-3',
+          themeColor,
+          buttonStyle: profile.button_style || 'default',
+          fontFamily: profile.font_family || 'default'
         };
       default: // default template
         return { 
@@ -212,7 +236,9 @@ const ProfilePage = () => {
           title: 'text-xl font-bold',
           bio: 'text-gray-600 text-sm',
           links: 'space-y-3',
-          themeColor
+          themeColor,
+          buttonStyle: profile.button_style || 'default',
+          fontFamily: profile.font_family || 'default'
         };
     }
   };
@@ -268,6 +294,8 @@ const ProfilePage = () => {
                 link={link} 
                 themeColor={templateStyles.themeColor}
                 template={profile.template || 'default'}
+                buttonStyle={templateStyles.buttonStyle}
+                fontFamily={templateStyles.fontFamily}
                 onClick={() => handleLinkClick(link.id)} 
               />
             ))

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { DashboardNav } from "@/components/DashboardNav";
 import { TemplateCard } from "@/components/TemplateCard";
 import { TemplatePreview } from "@/components/TemplatePreview";
@@ -9,6 +9,8 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
 
 interface Profile {
   id: string;
@@ -17,6 +19,9 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   template: string | null;
+  theme: string | null;
+  button_style?: string | null;
+  font_family?: string | null;
 }
 
 interface Link {
@@ -28,42 +33,55 @@ interface Link {
   clicks: number;
 }
 
+// Template data with added customization options
 const templates = [
   {
     id: 'default',
     name: 'Default',
     description: 'The classic LinkBeacon layout with a clean, simple design.',
     previewImage: 'https://via.placeholder.com/300x200/f0f0f0/808080?text=Default',
+    buttonStyle: 'default',
+    fontFamily: 'default',
   },
   {
     id: 'minimal',
     name: 'Minimal',
     description: 'A clean, minimalist design with focus on your content.',
     previewImage: 'https://via.placeholder.com/300x200/ffffff/808080?text=Minimal',
+    buttonStyle: 'minimal',
+    fontFamily: 'default',
   },
   {
     id: 'elegant-dark',
     name: 'Elegant Dark',
     description: 'A sophisticated dark theme with a premium feel.',
     previewImage: 'https://via.placeholder.com/300x200/1a1a1a/ffffff?text=Elegant+Dark',
+    buttonStyle: 'outline',
+    fontFamily: 'serif',
   },
   {
     id: 'gradient',
     name: 'Gradient',
     description: 'A vibrant background with gradient colors that pop.',
     previewImage: 'https://via.placeholder.com/300x200/8a2be2/ffffff?text=Gradient',
+    buttonStyle: 'gradient',
+    fontFamily: 'display',
   },
   {
     id: 'bubbles',
     name: 'Bubbles',
     description: 'A fun, playful design with a light blue theme.',
     previewImage: 'https://via.placeholder.com/300x200/e6f7ff/4a90e2?text=Bubbles',
+    buttonStyle: 'rounded',
+    fontFamily: 'handwritten',
   },
   {
     id: 'modern',
     name: 'Modern',
     description: 'A contemporary layout with a sleek side profile.',
     previewImage: 'https://via.placeholder.com/300x200/f5f5f5/808080?text=Modern',
+    buttonStyle: 'shadow',
+    fontFamily: 'mono',
   }
 ];
 
@@ -72,6 +90,8 @@ const TemplatesPage = () => {
   const queryClient = useQueryClient();
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("preset");
 
   // Get profile data
   const { 
@@ -116,12 +136,29 @@ const TemplatesPage = () => {
 
   // Template update mutation
   const updateTemplate = useMutation({
-    mutationFn: async (template: string) => {
+    mutationFn: async ({ 
+      template, 
+      theme = null, 
+      buttonStyle = null, 
+      fontFamily = null 
+    }: { 
+      template: string, 
+      theme?: string | null, 
+      buttonStyle?: string | null, 
+      fontFamily?: string | null 
+    }) => {
       if (!user) throw new Error("Not authenticated");
+      
+      const updateData: any = { template };
+      
+      // Only include these fields if they are provided
+      if (theme !== null) updateData.theme = theme;
+      if (buttonStyle !== null) updateData.button_style = buttonStyle;
+      if (fontFamily !== null) updateData.font_family = fontFamily;
       
       const { error } = await supabase
         .from('profiles')
-        .update({ template })
+        .update(updateData)
         .eq('id', user.id);
       
       if (error) throw error;
@@ -131,6 +168,7 @@ const TemplatesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
       toast.success(`Template updated to ${template}!`);
       setIsPreviewOpen(false);
+      setIsCustomDialogOpen(false);
     },
     onError: (error) => {
       console.error("Failed to update template:", error);
@@ -144,7 +182,33 @@ const TemplatesPage = () => {
   };
 
   const handleApplyTemplate = (templateId: string) => {
-    updateTemplate.mutate(templateId);
+    const selectedTemplate = templates.find(t => t.id === templateId);
+    if (selectedTemplate) {
+      updateTemplate.mutate({
+        template: templateId,
+        buttonStyle: selectedTemplate.buttonStyle,
+        fontFamily: selectedTemplate.fontFamily
+      });
+    } else {
+      updateTemplate.mutate({ template: templateId });
+    }
+  };
+
+  const handleOpenCustomDialog = () => {
+    setIsCustomDialogOpen(true);
+  };
+
+  const handleCustomTemplateSubmit = (customSettings: {
+    theme: string;
+    buttonStyle: string;
+    fontFamily: string;
+  }) => {
+    updateTemplate.mutate({
+      template: 'custom',
+      theme: customSettings.theme,
+      buttonStyle: customSettings.buttonStyle,
+      fontFamily: customSettings.fontFamily
+    });
   };
 
   if (isProfileLoading) {
@@ -189,36 +253,94 @@ const TemplatesPage = () => {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Templates</h1>
-            <p className="text-gray-500">Choose a template for your profile page</p>
+            <p className="text-gray-500">Choose and customize a template for your profile page</p>
           </div>
 
-          {/* Templates Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                id={template.id}
-                name={template.name}
-                description={template.description}
-                previewImage={template.previewImage}
-                isActive={profileData?.template === template.id}
-                onSelect={() => handleApplyTemplate(template.id)}
-                onPreview={() => handlePreviewTemplate(template.id)}
-              />
-            ))}
-          </div>
+          {/* Template Tabs */}
+          <Tabs defaultValue="preset" className="mb-6" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="preset">Preset Templates</TabsTrigger>
+              <TabsTrigger value="custom">Custom Template</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="preset">
+              {/* Preset Templates Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {templates.map((template) => (
+                  <TemplateCard
+                    key={template.id}
+                    id={template.id}
+                    name={template.name}
+                    description={template.description}
+                    previewImage={template.previewImage}
+                    isActive={profileData?.template === template.id}
+                    buttonStyle={template.buttonStyle}
+                    fontFamily={template.fontFamily}
+                    onSelect={() => handleApplyTemplate(template.id)}
+                    onPreview={() => handlePreviewTemplate(template.id)}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="custom">
+              {/* Custom Template Section */}
+              <div className="p-6 bg-white rounded-lg border">
+                <h2 className="text-xl font-medium mb-4">Create Your Custom Template</h2>
+                <p className="text-gray-500 mb-6">
+                  Design your own unique template by selecting colors, button styles, and fonts to match your brand.
+                </p>
+                <Button 
+                  className="bg-brand-purple hover:bg-brand-purple/90"
+                  onClick={handleOpenCustomDialog}
+                >
+                  <Palette className="h-4 w-4 mr-2" /> Customize Template
+                </Button>
+                
+                {profileData?.template === 'custom' && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                    <p className="flex items-center text-green-700">
+                      <Check className="h-4 w-4 mr-2" /> 
+                      You're currently using a custom template
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => setIsPreviewOpen(true)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" /> Preview Your Custom Template
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
       {/* Template Preview Dialog */}
-      {profileData && previewTemplate && (
+      {profileData && (previewTemplate || profileData.template === 'custom') && (
         <TemplatePreview
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          template={previewTemplate}
+          template={previewTemplate || profileData.template || 'default'}
           profile={profileData}
           links={links || []}
-          onApply={() => handleApplyTemplate(previewTemplate)}
+          onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}
+        />
+      )}
+
+      {/* Custom Template Dialog */}
+      {profileData && (
+        <CustomTemplateDialog
+          isOpen={isCustomDialogOpen}
+          onClose={() => setIsCustomDialogOpen(false)}
+          onSubmit={handleCustomTemplateSubmit}
+          initialSettings={{
+            theme: profileData.theme || 'purple',
+            buttonStyle: profileData.button_style || 'default',
+            fontFamily: profileData.font_family || 'default'
+          }}
         />
       )}
     </div>

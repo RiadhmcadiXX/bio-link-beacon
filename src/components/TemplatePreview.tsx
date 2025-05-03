@@ -15,6 +15,9 @@ interface TemplatePreviewProps {
     display_name: string | null;
     bio: string | null;
     avatar_url: string | null;
+    theme?: string | null;
+    button_style?: string | null;
+    font_family?: string | null;
   };
   links: Array<{
     id: string;
@@ -89,6 +92,23 @@ export const TemplatePreview = ({
           bio: 'text-sm text-gray-600 mt-1',
           links: 'space-y-3'
         };
+      case 'custom':
+        // For custom template, use theme from profile settings
+        const themeColor = profile.theme || 'purple';
+        return {
+          background: `bg-gradient-to-br ${
+            themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
+            themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
+            themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
+            'from-orange-100 to-orange-200'
+          }`,
+          container: 'max-w-md mx-auto px-4 py-8',
+          avatar: 'h-20 w-20',
+          header: 'text-center mb-6',
+          title: 'text-xl font-bold',
+          bio: 'text-gray-600 text-sm',
+          links: 'space-y-3'
+        };
       default: // default template
         return {
           background: 'bg-gradient-to-br from-purple-50 to-purple-100',
@@ -104,14 +124,49 @@ export const TemplatePreview = ({
 
   const styles = getTemplateStyles();
 
-  // Determine theme color for links based on template
+  // Determine theme color for links based on template or profile theme
   const getThemeColor = () => {
+    if (template === 'custom') {
+      return profile.theme || 'purple';
+    }
+    
     switch (template) {
       case 'elegant-dark': return 'blue';
       case 'gradient': return 'pink';
       case 'bubbles': return 'blue';
       case 'modern': return 'orange';
       default: return 'purple';
+    }
+  };
+
+  // Get button style based on template or profile settings
+  const getButtonStyle = () => {
+    if (template === 'custom') {
+      return profile.button_style || 'default';
+    }
+    
+    switch (template) {
+      case 'minimal': return 'minimal';
+      case 'elegant-dark': return 'outline';
+      case 'gradient': return 'gradient';
+      case 'bubbles': return 'rounded';
+      case 'modern': return 'shadow';
+      default: return 'default';
+    }
+  };
+
+  // Get font family based on template or profile settings
+  const getFontFamily = () => {
+    if (template === 'custom') {
+      return profile.font_family || 'default';
+    }
+    
+    switch (template) {
+      case 'elegant-dark': return 'serif';
+      case 'gradient': return 'display';
+      case 'bubbles': return 'handwritten';
+      case 'modern': return 'mono';
+      default: return 'default';
     }
   };
 
@@ -125,7 +180,13 @@ export const TemplatePreview = ({
       <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[80vh]">
         <div className="flex flex-col h-full">
           <div className="p-4 border-b flex justify-between items-center">
-            <h2 className="font-semibold">Preview Template: {template.charAt(0).toUpperCase() + template.slice(1)}</h2>
+            <h2 className="font-semibold">
+              Preview Template: {
+                template === 'custom' 
+                ? 'Custom' 
+                : template.charAt(0).toUpperCase() + template.slice(1)
+              }
+            </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -163,7 +224,10 @@ export const TemplatePreview = ({
                         key={link.id} 
                         link={link} 
                         themeColor={getThemeColor()}
+                        buttonStyle={getButtonStyle()}
+                        fontFamily={getFontFamily()}
                         onClick={() => handleLinkClick()} 
+                        template={template}
                       />
                     ))
                   ) : (
@@ -176,7 +240,7 @@ export const TemplatePreview = ({
 
           <div className="p-4 border-t flex justify-end">
             <Button className="bg-brand-purple hover:bg-brand-purple/90" onClick={onApply}>
-              Apply This Template
+              {template === 'custom' ? 'Apply Custom Settings' : 'Apply This Template'}
             </Button>
           </div>
         </div>
