@@ -103,6 +103,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const initializeAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
+
+        console.log("Auth debug:", {
+          session,
+          user,
+          isLoading,
+        });
         
         if (!mounted) return;
         
