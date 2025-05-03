@@ -330,7 +330,7 @@ const TemplatesPage = () => {
         />
       )}
 
-      {/* Custom Template Dialog */}
+      {/* Custom Template Dialog with Live Preview */}
       {profileData && (
         <CustomTemplateDialog
           isOpen={isCustomDialogOpen}
@@ -341,6 +341,13 @@ const TemplatesPage = () => {
             buttonStyle: profileData.button_style || 'default',
             fontFamily: profileData.font_family || 'default'
           }}
+          profileData={{
+            username: profileData.username,
+            display_name: profileData.display_name,
+            bio: profileData.bio,
+            avatar_url: profileData.avatar_url
+          }}
+          links={links || []}
         />
       )}
     </div>
