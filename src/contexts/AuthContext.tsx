@@ -46,23 +46,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     console.log("AuthProvider initialized");
     let mounted = true;
 
-    const timeout = setTimeout(() => {
-    if (mounted) {
-      console.warn("Auth session timeout - forcing logout");
-      setSession(null);
-      setUser(null);
-      setIsLoading(false);
-    }
-  }, 6000); // 6 seconds max wait for Supabase response
-    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log("Auth state changed:", event);
         
         if (!mounted) return;
-
-        console.log("Session exists but user is null?", session, user);
         
         if (newSession) {
           setSession(newSession);
@@ -109,44 +98,48 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 
     // THEN check for existing session
-    const initializeAuth = async () => {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const currentSession = sessionData?.session;
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!mounted) return;
 
-    if (!currentSession) throw new Error("No session found");
-
-    setSession(currentSession);
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData?.user) throw new Error("No user");
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', userData.user.id)
-      .single();
-
-    if (profileError) throw profileError;
-
-    setUser({ ...userData.user, username: profile?.username });
-  } catch (err) {
-    console.warn("Session invalid or missing, redirecting to login...");
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    navigate("/login");
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
-    initializeAuth();
+      if (currentSession) {
+        setSession(currentSession);
+        
+        // Fetch user profile if we have a session
+        if (currentSession.user) {
+          supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', currentSession.user.id)
+            .single()
+            .then(({ data: profile }) => {
+              if (mounted) {
+                setUser({
+                  ...currentSession.user,
+                  username: profile?.username
+                });
+              }
+            })
+            .catch(error => {
+              console.error("Error fetching profile:", error);
+              if (mounted) {
+                setUser(currentSession.user);
+              }
+            })
+            .finally(() => {
+              if (mounted) {
+                setIsLoading(false);
+              }
+            });
+        }
+      } else {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    });
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
