@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { MobileNav } from "@/components/MobileNav";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Index = () => {
           {isLoading ? (
             <div className="w-24 h-9 animate-pulse bg-gray-200 rounded-md"></div>
           ) : isAuthenticated ? (
-            <>
+            <div className="hidden md:flex gap-4">
               <Button
                 onClick={() => navigate("/dashboard")}
                 variant="outline"
@@ -35,17 +36,20 @@ const Index = () => {
               >
                 Log Out
               </Button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="hidden md:flex gap-4">
               <Link to="/login" className="text-gray-600 hover:text-brand-purple transition-colors">
                 Log In
               </Link>
               <Button onClick={() => navigate("/signup")} className="bg-brand-purple hover:bg-brand-purple/90">
                 Sign Up
               </Button>
-            </>
+            </div>
           )}
+          
+          {/* Mobile Navigation */}
+          <MobileNav />
         </div>
       </header>
 
