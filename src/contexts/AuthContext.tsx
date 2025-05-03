@@ -43,71 +43,113 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("AuthProvider initialized");
+    let mounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        setSession(newSession);
+        console.log("Auth state changed:", event);
         
-        // Fetch user profile data if signed in
-        if (newSession?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', newSession.user.id)
-            .single();
-            
-          // Extend the user object with the username
-          const extendedUser: ExtendedUser = {
-            ...newSession.user,
-            username: profile?.username
-          };
+        if (!mounted) return;
+        
+        if (newSession) {
+          setSession(newSession);
           
-          setUser(extendedUser);
+          // Fetch user profile data if signed in
+          if (newSession.user) {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', newSession.user.id)
+                .single();
+                
+              // Extend the user object with the username
+              if (mounted) {
+                const extendedUser: ExtendedUser = {
+                  ...newSession.user,
+                  username: profile?.username
+                };
+                
+                setUser(extendedUser);
+              }
+            } catch (error) {
+              console.error("Error fetching profile:", error);
+            }
+          }
         } else {
-          setUser(null);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+          }
         }
         
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' && mounted) {
           toast.success("Signed in successfully");
-        } else if (event === 'SIGNED_OUT') {
+        } else if (event === 'SIGNED_OUT' && mounted) {
           toast.success("Signed out successfully");
+        }
+        
+        if (mounted) {
+          setIsLoading(false);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      
-      if (session?.user) {
-        // Fetch user profile when initializing
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', session.user.id)
-          .single();
-          
-        // Extend the user object with the username
-        const extendedUser: ExtendedUser = {
-          ...session.user,
-          username: profile?.username
-        };
+    const initializeAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
         
-        setUser(extendedUser);
-      } else {
-        setUser(null);
+        if (!mounted) return;
+        
+        if (data.session) {
+          setSession(data.session);
+          
+          // Fetch user profile when initializing
+          if (data.session.user) {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', data.session.user.id)
+                .single();
+                
+              // Extend the user object with the username
+              if (mounted) {
+                const extendedUser: ExtendedUser = {
+                  ...data.session.user,
+                  username: profile?.username
+                };
+                
+                setUser(extendedUser);
+              }
+            } catch (profileError) {
+              console.error("Error fetching profile during initialization:", profileError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-      
-      setIsLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Set session expiration correctly using sessionOptions
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -173,5 +215,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
   };
 
+  console.log("Auth provider rendering with state:", { isAuthenticated: !!user, isLoading });
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

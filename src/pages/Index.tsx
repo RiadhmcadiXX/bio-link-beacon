@@ -8,6 +8,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout, isLoading } = useAuthContext();
   
+  console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header/Navigation */}
