@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +42,13 @@ const Dashboard = () => {
   const [editingLink, setEditingLink] = useState<Partial<Link> | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  if (!isLoading && !user) {
+    navigate("/login");
+  }
+}, [isLoading, user]);
 
   // Get profile data
   const { 

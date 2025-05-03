@@ -101,55 +101,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // THEN check for existing session
     const initializeAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log("Session:", sessionData, sessionError);
 
-        console.log("Auth debug:", {
-          session,
-          user,
-          isLoading,
-        });
+    if (sessionData?.session) {
+      setSession(sessionData.session);
 
-        console.log("Session fetch result:", data);
-        
-        if (!mounted) return;
-        
-        if (data.session) {
-          setSession(data.session);
-          
-          // Fetch user profile when initializing
-          if (data.session.user) {
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', data.session.user.id)
-                .single();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) throw new Error("No user");
 
-              console.log("Profile result:", profile, "Error:", profileError);
-                
-              // Extend the user object with the username
-              if (mounted) {
-                const extendedUser: ExtendedUser = {
-                  ...data.session.user,
-                  username: profile?.username
-                };
-                
-                setUser(extendedUser);
-              }
-            } catch (profileError) {
-              console.error("Error fetching profile during initialization:", profileError);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      setUser({ ...userData.user, username: profile?.username });
+    } else {
+      // No session
+      setUser(null);
+      setSession(null);
+    }
+  } catch (error) {
+    console.error("Auth init error:", error);
+    setUser(null);
+    setSession(null);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     initializeAuth();
 
