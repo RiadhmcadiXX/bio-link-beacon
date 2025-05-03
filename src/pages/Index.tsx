@@ -8,12 +8,7 @@ import { MobileNav } from "@/components/MobileNav";
 const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout, isLoading } = useAuthContext();
-  if (isLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <span className="text-gray-600 animate-pulse">Loading...</span>
-    </div>
-  );
+  
 }
   
   console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
