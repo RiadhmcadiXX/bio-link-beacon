@@ -111,37 +111,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // THEN check for existing session
     const initializeAuth = async () => {
   try {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    console.log("Session:", sessionData, sessionError);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentSession = sessionData?.session;
 
-    if (sessionData?.session) {
-      setSession(sessionData.session);
+    if (!currentSession) throw new Error("No session found");
 
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) throw new Error("No user");
+    setSession(currentSession);
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', userData.user.id)
-        .single();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) throw new Error("No user");
 
-      if (profileError) throw profileError;
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userData.user.id)
+      .single();
 
-      setUser({ ...userData.user, username: profile?.username });
-    } else {
-      // No session
-      setUser(null);
-      setSession(null);
-    }
-  } catch (error) {
-    console.error("Auth init error:", error);
+    if (profileError) throw profileError;
+
+    setUser({ ...userData.user, username: profile?.username });
+  } catch (err) {
+    console.warn("Session invalid or missing, redirecting to login...");
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    navigate("/login");
   } finally {
     setIsLoading(false);
   }
 };
+
 
     initializeAuth();
 
