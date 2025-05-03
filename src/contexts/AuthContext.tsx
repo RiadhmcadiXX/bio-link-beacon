@@ -109,6 +109,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           user,
           isLoading,
         });
+
+        console.log("Session fetch result:", data);
         
         if (!mounted) return;
         
@@ -123,6 +125,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 .select('username')
                 .eq('id', data.session.user.id)
                 .single();
+
+              console.log("Profile result:", profile, "Error:", profileError);
                 
               // Extend the user object with the username
               if (mounted) {
