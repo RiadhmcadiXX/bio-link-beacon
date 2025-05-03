@@ -104,7 +104,11 @@ const Dashboard = () => {
     onError: (error) => {
       console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
     }
+
   });
 
   // Link mutations

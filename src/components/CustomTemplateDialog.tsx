@@ -133,12 +133,16 @@ export const CustomTemplateDialog = ({
 
   // Font family options
   const fontFamilyOptions = [
-    { value: "default", label: "Default", class: "font-sans" },
-    { value: "serif", label: "Serif", class: "font-serif" },
-    { value: "mono", label: "Monospace", class: "font-mono" },
-    { value: "display", label: "Display", class: "font-bold tracking-wide" },
-    { value: "handwritten", label: "Handwritten", class: "italic" },
+    { value: "inter", label: "Inter (Default)", class: "font-inter" },
+    { value: "roboto", label: "Roboto", class: "font-roboto" },
+    { value: "poppins", label: "Poppins", class: "font-poppins" },
+    { value: "montserrat", label: "Montserrat", class: "font-montserrat" },
+    { value: "raleway", label: "Raleway", class: "font-raleway" },
+    { value: "playfair", label: "Playfair Display", class: "font-playfair" },
+    { value: "lobster", label: "Lobster", class: "font-lobster" },
+    { value: "pacifico", label: "Pacifico", class: "font-pacifico" },
   ];
+  
 
   const getFontClass = (font: string) => {
     const option = fontFamilyOptions.find((f) => f.value === font);

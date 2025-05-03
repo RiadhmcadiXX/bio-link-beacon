@@ -122,7 +122,27 @@ export const TemplatePreview = ({
     }
   };
 
+  
+
+  const fontClassMap: Record<string, string> = {
+    inter: "font-inter",
+    roboto: "font-roboto",
+    poppins: "font-poppins",
+    montserrat: "font-montserrat",
+    raleway: "font-raleway",
+    playfair: "font-playfair",
+    lobster: "font-lobster",
+    pacifico: "font-pacifico",
+    serif: "font-serif",
+    mono: "font-mono",
+    display: "font-extrabold tracking-wide",
+    handwritten: "italic",
+    default: "font-sans",
+  };
+  
+
   const styles = getTemplateStyles();
+  
 
   // Determine theme color for links based on template or profile theme
   const getThemeColor = () => {
@@ -170,6 +190,8 @@ export const TemplatePreview = ({
     }
   };
 
+  const fontClass = fontClassMap[getFontFamily()] || "font-sans";
+
   const handleLinkClick = () => {
     // Prevent actual navigation in preview mode
     return;
@@ -193,7 +215,7 @@ export const TemplatePreview = ({
           </div>
           
           <div className="overflow-y-auto flex-1">
-            <div className={`${styles.background} min-h-full`}>
+            <div className={`${styles.background} min-h-full ${fontClass}`}>
               <div className={styles.container}>
                 {template === 'modern' ? (
                   <div className={styles.header}>

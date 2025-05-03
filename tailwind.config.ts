@@ -70,6 +70,16 @@ export default {
 					orange: '#F97316'
 				}
 			},
+			fontFamily: {
+				inter: ['Inter', 'sans-serif'],
+				roboto: ['Roboto', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif'],
+				montserrat: ['Montserrat', 'sans-serif'],
+				raleway: ['Raleway', 'sans-serif'],
+				playfair: ['"Playfair Display"', 'serif'],
+				lobster: ['Lobster', 'cursive'],
+				pacifico: ['Pacifico', 'cursive'],
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
