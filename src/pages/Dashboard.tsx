@@ -14,6 +14,7 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 // Define types for our data
 interface Profile {
@@ -38,17 +39,21 @@ interface Link {
 }
 
 const Dashboard = () => {
-  const { user, isLoading } = useAuthContext();
+  const { user, isLoading } = useAuth();
   const [editingLink, setEditingLink] = useState<Partial<Link> | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   useEffect(() => {
-  if (!isLoading && !isAuthenticated) {
-    navigate("/login");
-  }
-}, [isAuthenticated, isLoading]);
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) return <div className="h-screen flex justify-center items-center">Loading...</div>;
+
+  if (!user) return null;
 
   // Get profile data
   const { 
