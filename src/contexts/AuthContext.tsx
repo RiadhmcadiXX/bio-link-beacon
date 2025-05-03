@@ -45,6 +45,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     console.log("AuthProvider initialized");
     let mounted = true;
+
+    const timeout = setTimeout(() => {
+    if (mounted) {
+      console.warn("Auth session timeout - forcing logout");
+      setSession(null);
+      setUser(null);
+      setIsLoading(false);
+    }
+  }, 6000); // 6 seconds max wait for Supabase response
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -138,6 +147,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
