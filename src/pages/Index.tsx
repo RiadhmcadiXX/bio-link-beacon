@@ -7,7 +7,15 @@ import { MobileNav } from "@/components/MobileNav";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout, isLoading } = useAuthContext();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
   
   
   console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
