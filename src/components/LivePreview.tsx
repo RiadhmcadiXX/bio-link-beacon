@@ -120,11 +120,6 @@ export const LivePreview = ({
 
   const styles = getTemplateStyles();
   
-  const handleLinkClick = (e: React.MouseEvent) => {
-    // Prevent navigation in the preview
-    e.preventDefault();
-  };
-
   // Add some sample links if none are provided
   const sampleLinks = links && links.length > 0 ? links : [
     { id: '1', title: 'Sample Link 1', url: 'https://example.com', icon: 'globe' },

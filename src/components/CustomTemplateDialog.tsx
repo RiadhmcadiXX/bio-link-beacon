@@ -65,6 +65,27 @@ export const CustomTemplateDialog = ({
   const [buttonStyle, setButtonStyle] = useState(initialSettings.buttonStyle);
   const [fontFamily, setFontFamily] = useState(initialSettings.fontFamily);
   const [activeTab, setActiveTab] = useState("colors");
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Reset state when dialog opens with initialSettings
+  useEffect(() => {
+    if (isOpen) {
+      setTheme(initialSettings.theme);
+      setButtonStyle(initialSettings.buttonStyle);
+      setFontFamily(initialSettings.fontFamily);
+      setHasChanges(false);
+    }
+  }, [isOpen, initialSettings]);
+
+  // Track changes to enable/disable save button
+  useEffect(() => {
+    const hasChanged = 
+      theme !== initialSettings.theme || 
+      buttonStyle !== initialSettings.buttonStyle || 
+      fontFamily !== initialSettings.fontFamily;
+    
+    setHasChanges(hasChanged);
+  }, [theme, buttonStyle, fontFamily, initialSettings]);
 
   const handleSubmit = () => {
     onSubmit({
@@ -281,7 +302,10 @@ export const CustomTemplateDialog = ({
           <Button variant="outline" onClick={onClose} className="mr-2">
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button 
+            onClick={handleSubmit}
+            disabled={!hasChanges}
+          >
             Apply Custom Template
           </Button>
         </DialogFooter>
