@@ -45,10 +45,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-  if (!isLoading && !user) {
+  if (!isLoading && !isAuthenticated) {
     navigate("/login");
   }
-}, [isLoading, user]);
+}, [isAuthenticated, isLoading]);
 
   // Get profile data
   const { 

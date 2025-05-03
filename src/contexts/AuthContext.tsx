@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
-// Define an extended user type to include username
+// Extend user type with custom data
 interface ExtendedUser extends User {
   username?: string;
 }
@@ -31,178 +31,127 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuthContext = () => useContext(AuthContext);
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Check session and user on load
   useEffect(() => {
-    console.log("AuthProvider initialized");
     let mounted = true;
 
-    // Set up auth state listener FIRST
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log("Auth state changed:", event);
+    // Force redirect if auth hangs too long
+    const maxWaitTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("Auth timeout: redirecting to login");
+        setUser(null);
+        setSession(null);
+        setIsLoading(false);
+        navigate("/login");
+      }
+    }, 8000);
+
+    // Auth state listener
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+
+        setSession(session);
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", session.user.id)
+            .single();
+
+          setUser({
+            ...session.user,
+            username: profile?.username ?? undefined,
+          });
+        } else {
+          setUser(null);
+        }
+
+        setIsLoading(false);
+      }
+    );
+
+    // Initial load
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
 
       if (!mounted) return;
 
-      if (newSession) {
-        setSession(newSession);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", session.user.id)
+          .single();
 
-        // Fetch user profile data if signed in
-        if (newSession.user) {
-          try {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("username")
-              .eq("id", newSession.user.id)
-              .single();
-
-            // Extend the user object with the username
-            if (mounted) {
-              const extendedUser: ExtendedUser = {
-                ...newSession.user,
-                username: profile?.username,
-              };
-
-              setUser(extendedUser);
-            }
-          } catch (error) {
-            console.error("Error fetching profile:", error);
-          }
-        }
+        setUser({
+          ...session.user,
+          username: profile?.username ?? undefined,
+        });
+        setSession(session);
       } else {
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-        }
+        setUser(null);
+        setSession(null);
       }
 
-      if (event === "SIGNED_IN" && mounted) {
-        toast.success("Signed in successfully");
-      } else if (event === "SIGNED_OUT" && mounted) {
-        toast.success("Signed out successfully");
-      }
+      setIsLoading(false);
+    };
 
-      if (mounted) {
-        setIsLoading(false);
-      }
-    });
-
-    // THEN check for existing session
-    (async () => {
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-        if (!mounted) return;
-
-        if (sessionData?.session && sessionData.session.user) {
-          const currentUser = sessionData.session.user;
-          setSession(sessionData.session);
-
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("username")
-            .eq("id", currentUser.id)
-            .single();
-
-          if (profileError) throw profileError;
-
-          if (mounted) {
-            setUser({
-              ...currentUser,
-              username: profile?.username || undefined,
-            });
-            setIsLoading(false);
-          }
-        } else {
-          // No valid session
-          throw new Error("No session or user");
-        }
-      } catch (err) {
-        console.warn("Session invalid or failed to load, forcing logout", err);
-        await supabase.auth.signOut(); // Clear broken session
-        if (mounted) {
-          setUser(null);
-          setSession(null);
-          setIsLoading(false);
-          navigate("/login"); // redirect to login
-        }
-      }
-    })();
+    init();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      clearTimeout(maxWaitTimeout);
+      listener?.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-      if (error) throw error;
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error(error.message || "Failed to sign in");
+    if (error) {
+      toast.error("Login failed");
       throw error;
-    } finally {
-      setIsLoading(false);
     }
+
+    navigate("/dashboard");
+    setIsLoading(false);
   };
 
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        },
-      });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username },
+      },
+    });
 
-      if (error) throw error;
-      toast.success(
-        "Signed up successfully! Please check your email for verification."
-      );
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      toast.error(error.message || "Failed to sign up");
+    if (error) {
+      toast.error("Signup failed");
       throw error;
-    } finally {
-      setIsLoading(false);
     }
+
+    toast.success("Signup successful — check your email!");
+    setIsLoading(false);
   };
 
   const logout = async () => {
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate("/");
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast.error(error.message || "Failed to sign out");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    navigate("/login");
+    setIsLoading(false);
   };
 
   const value = {
@@ -215,9 +164,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
   };
 
-  console.log("Auth provider rendering with state:", {
-    isAuthenticated: !!user,
-    isLoading,
-  });
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
