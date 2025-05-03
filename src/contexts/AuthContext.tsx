@@ -106,30 +106,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         // Fetch user profile if we have a session
         if (currentSession.user) {
-          supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', currentSession.user.id)
-            .single()
-            .then(({ data: profile }) => {
-              if (mounted) {
-                setUser({
-                  ...currentSession.user,
-                  username: profile?.username
-                });
-              }
-            })
-            .catch(error => {
-              console.error("Error fetching profile:", error);
-              if (mounted) {
-                setUser(currentSession.user);
-              }
-            })
-            .finally(() => {
-              if (mounted) {
-                setIsLoading(false);
-              }
-            });
+          (async () => {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', currentSession.user.id)
+      .single();
+
+    if (error) throw error;
+
+    if (mounted) {
+      setUser({
+        ...currentSession.user,
+        username: profile?.username
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    if (mounted) {
+      setUser(currentSession.user); // fallback
+    }
+  } finally {
+    if (mounted) {
+      setIsLoading(false);
+    }
+  }
+})();
         }
       } else {
         if (mounted) {
