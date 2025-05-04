@@ -17,6 +17,17 @@ import NotFound from "./pages/NotFound";
 import SettingsPage from "./pages/SettingsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 
+// Import Google Fonts in the head of the document
+const addGoogleFonts = () => {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Lobster&family=Pacifico&family=Oswald:wght@400;500;600;700&family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Dancing+Script:wght@400;700&family=Quicksand:wght@400;500;600;700&family=Comfortaa:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap';
+  document.head.appendChild(link);
+};
+
+// Add Google Fonts
+addGoogleFonts();
+
 const queryClient = new QueryClient();
 
 const App = () => (

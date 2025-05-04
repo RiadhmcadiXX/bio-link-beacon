@@ -18,6 +18,9 @@ interface TemplatePreviewProps {
     theme?: string | null;
     button_style?: string | null;
     font_family?: string | null;
+    customColor?: string | null;
+    gradientFrom?: string | null;
+    gradientTo?: string | null;
   };
   links: Array<{
     id: string;
@@ -94,9 +97,22 @@ export const TemplatePreview = ({
         };
       case 'custom':
         // For custom template, use theme from profile settings
+        // Check if using custom gradient
+        if (profile.gradientFrom && profile.gradientTo) {
+          return {
+            background: '', // We'll use inline style for gradient
+            container: 'max-w-md mx-auto px-4 py-8',
+            avatar: 'h-20 w-20',
+            header: 'text-center mb-6',
+            title: 'text-xl font-bold',
+            bio: 'text-gray-600 text-sm',
+            links: 'space-y-3'
+          };
+        }
+        
         const themeColor = profile.theme || 'purple';
         return {
-          background: `bg-gradient-to-br ${
+          background: profile.customColor ? '' : `bg-gradient-to-br ${
             themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
             themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
             themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
@@ -122,7 +138,21 @@ export const TemplatePreview = ({
     }
   };
 
-  
+  // Generate custom background style if needed
+  const getCustomBackgroundStyle = () => {
+    if (template === 'custom') {
+      if (profile.gradientFrom && profile.gradientTo) {
+        return {
+          background: `linear-gradient(135deg, ${profile.gradientFrom} 0%, ${profile.gradientTo} 100%)`
+        };
+      } else if (profile.customColor) {
+        return {
+          backgroundColor: profile.customColor
+        };
+      }
+    }
+    return {};
+  };
 
   const fontClassMap: Record<string, string> = {
     inter: "font-inter",
@@ -133,6 +163,13 @@ export const TemplatePreview = ({
     playfair: "font-playfair",
     lobster: "font-lobster",
     pacifico: "font-pacifico",
+    oswald: "font-oswald",
+    lato: "font-lato",
+    merriweather: "font-merriweather",
+    dancing: "font-dancing",
+    quicksand: "font-quicksand",
+    comfortaa: "font-comfortaa",
+    nunito: "font-nunito",
     serif: "font-serif",
     mono: "font-mono",
     display: "font-extrabold tracking-wide",
@@ -140,14 +177,13 @@ export const TemplatePreview = ({
     default: "font-sans",
   };
   
-
   const styles = getTemplateStyles();
   
 
   // Determine theme color for links based on template or profile theme
   const getThemeColor = () => {
     if (template === 'custom') {
-      return profile.theme || 'purple';
+      return profile.customColor || profile.theme || 'purple';
     }
     
     switch (template) {
@@ -215,7 +251,10 @@ export const TemplatePreview = ({
           </div>
           
           <div className="overflow-y-auto flex-1">
-            <div className={`${styles.background} min-h-full ${fontClass}`}>
+            <div 
+              className={`${styles.background} min-h-full ${fontClass}`}
+              style={getCustomBackgroundStyle()}
+            >
               <div className={styles.container}>
                 {template === 'modern' ? (
                   <div className={styles.header}>
@@ -250,6 +289,8 @@ export const TemplatePreview = ({
                         fontFamily={getFontFamily()}
                         onClick={() => handleLinkClick()} 
                         template={template}
+                        gradientFrom={profile.gradientFrom || undefined}
+                        gradientTo={profile.gradientTo || undefined}
                       />
                     ))
                   ) : (

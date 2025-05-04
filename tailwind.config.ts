@@ -79,6 +79,13 @@ export default {
 				playfair: ['"Playfair Display"', 'serif'],
 				lobster: ['Lobster', 'cursive'],
 				pacifico: ['Pacifico', 'cursive'],
+				oswald: ['Oswald', 'sans-serif'],
+				lato: ['Lato', 'sans-serif'],
+				merriweather: ['Merriweather', 'serif'],
+				dancing: ['"Dancing Script"', 'cursive'],
+				quicksand: ['Quicksand', 'sans-serif'],
+				comfortaa: ['Comfortaa', 'cursive'],
+				nunito: ['Nunito', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

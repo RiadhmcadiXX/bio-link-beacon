@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,9 @@ interface Profile {
   theme: string | null;
   button_style?: string | null;
   font_family?: string | null;
+  customColor?: string | null;
+  gradientFrom?: string | null;
+  gradientTo?: string | null;
 }
 
 interface Link {
@@ -140,12 +144,18 @@ const TemplatesPage = () => {
       template, 
       theme = null, 
       buttonStyle = null, 
-      fontFamily = null 
+      fontFamily = null,
+      customColor = null,
+      gradientFrom = null,
+      gradientTo = null
     }: { 
       template: string, 
       theme?: string | null, 
       buttonStyle?: string | null, 
-      fontFamily?: string | null 
+      fontFamily?: string | null,
+      customColor?: string | null,
+      gradientFrom?: string | null,
+      gradientTo?: string | null
     }) => {
       if (!user) throw new Error("Not authenticated");
       
@@ -155,6 +165,9 @@ const TemplatesPage = () => {
       if (theme !== null) updateData.theme = theme;
       if (buttonStyle !== null) updateData.button_style = buttonStyle;
       if (fontFamily !== null) updateData.font_family = fontFamily;
+      if (customColor !== null) updateData.custom_color = customColor;
+      if (gradientFrom !== null) updateData.gradient_from = gradientFrom;
+      if (gradientTo !== null) updateData.gradient_to = gradientTo;
       
       const { error } = await supabase
         .from('profiles')
@@ -187,7 +200,11 @@ const TemplatesPage = () => {
       updateTemplate.mutate({
         template: templateId,
         buttonStyle: selectedTemplate.buttonStyle,
-        fontFamily: selectedTemplate.fontFamily
+        fontFamily: selectedTemplate.fontFamily,
+        // Clear custom settings when applying preset template
+        customColor: null,
+        gradientFrom: null,
+        gradientTo: null
       });
     } else {
       updateTemplate.mutate({ template: templateId });
@@ -202,12 +219,18 @@ const TemplatesPage = () => {
     theme: string;
     buttonStyle: string;
     fontFamily: string;
+    customColor?: string;
+    gradientFrom?: string;
+    gradientTo?: string;
   }) => {
     updateTemplate.mutate({
       template: 'custom',
       theme: customSettings.theme,
       buttonStyle: customSettings.buttonStyle,
-      fontFamily: customSettings.fontFamily
+      fontFamily: customSettings.fontFamily,
+      customColor: customSettings.customColor,
+      gradientFrom: customSettings.gradientFrom,
+      gradientTo: customSettings.gradientTo
     });
   };
 
@@ -324,7 +347,12 @@ const TemplatesPage = () => {
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
           template={previewTemplate || profileData.template || 'default'}
-          profile={profileData}
+          profile={{
+            ...profileData,
+            customColor: profileData.customColor || null,
+            gradientFrom: profileData.gradientFrom || null,
+            gradientTo: profileData.gradientTo || null
+          }}
           links={links || []}
           onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}
         />
@@ -339,7 +367,10 @@ const TemplatesPage = () => {
           initialSettings={{
             theme: profileData.theme || 'purple',
             buttonStyle: profileData.button_style || 'default',
-            fontFamily: profileData.font_family || 'default'
+            fontFamily: profileData.font_family || 'default',
+            customColor: profileData.customColor || undefined,
+            gradientFrom: profileData.gradientFrom || undefined,
+            gradientTo: profileData.gradientTo || undefined
           }}
           profileData={{
             username: profileData.username,

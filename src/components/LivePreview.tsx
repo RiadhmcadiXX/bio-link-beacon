@@ -25,6 +25,9 @@ interface LivePreviewProps {
   themeColor: string;
   buttonStyle: string;
   fontFamily: string;
+  customColor?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
 }
 
 export const LivePreview = ({
@@ -33,7 +36,10 @@ export const LivePreview = ({
   template,
   themeColor,
   buttonStyle,
-  fontFamily
+  fontFamily,
+  customColor,
+  gradientFrom,
+  gradientTo
 }: LivePreviewProps) => {
   
   // Generate styles based on template
@@ -90,9 +96,23 @@ export const LivePreview = ({
           links: 'space-y-2'
         };
       case 'custom':
-        // For custom template, use theme from profile settings
+        // For custom template, use customized theme settings
+        // Check if using custom gradient
+        if (gradientFrom && gradientTo) {
+          return {
+            background: '', // We'll use inline style for gradient
+            container: 'max-w-full mx-auto px-4 py-6',
+            avatar: 'h-12 w-12',
+            header: 'text-center mb-4',
+            title: 'text-lg font-bold',
+            bio: 'text-xs text-gray-600',
+            links: 'space-y-2'
+          };
+        }
+        
+        // If using custom color or preset theme color
         return {
-          background: `bg-gradient-to-br ${
+          background: customColor ? '' : `bg-gradient-to-br ${
             themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
             themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
             themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
@@ -120,15 +140,60 @@ export const LivePreview = ({
 
   const styles = getTemplateStyles();
   
+  // Generate custom background style if needed
+  const getCustomBackgroundStyle = () => {
+    if (template === 'custom') {
+      if (gradientFrom && gradientTo) {
+        return {
+          background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`
+        };
+      } else if (customColor) {
+        return {
+          backgroundColor: customColor
+        };
+      }
+    }
+    return {};
+  };
+  
   // Add some sample links if none are provided
   const sampleLinks = links && links.length > 0 ? links : [
     { id: '1', title: 'Sample Link 1', url: 'https://example.com', icon: 'globe' },
     { id: '2', title: 'Sample Link 2', url: 'https://example.com', icon: 'link' }
   ];
 
+  // Font class mapping
+  const fontClassMap: Record<string, string> = {
+    inter: "font-inter",
+    roboto: "font-roboto",
+    poppins: "font-poppins",
+    montserrat: "font-montserrat",
+    raleway: "font-raleway",
+    playfair: "font-playfair",
+    lobster: "font-lobster",
+    pacifico: "font-pacifico",
+    oswald: "font-oswald",
+    lato: "font-lato",
+    merriweather: "font-merriweather",
+    dancing: "font-dancing",
+    quicksand: "font-quicksand",
+    comfortaa: "font-comfortaa",
+    nunito: "font-nunito",
+    serif: "font-serif",
+    mono: "font-mono",
+    display: "font-extrabold tracking-wide",
+    handwritten: "italic",
+    default: "font-sans",
+  };
+  
+  const fontClass = fontClassMap[fontFamily] || "font-sans";
+
   return (
-    <div className={`rounded-md overflow-hidden h-full ${styles.background}`}>
-      <div className={styles.container}>
+    <div 
+      className={`rounded-md overflow-hidden h-full ${styles.background}`}
+      style={getCustomBackgroundStyle()}
+    >
+      <div className={`${styles.container} ${fontClass}`}>
         {template === 'modern' ? (
           <div className={styles.header}>
             <Avatar className={styles.avatar}>
@@ -156,11 +221,13 @@ export const LivePreview = ({
             <ProfileLink 
               key={link.id} 
               link={link} 
-              themeColor={themeColor}
+              themeColor={customColor ? customColor : themeColor}
               buttonStyle={buttonStyle}
               fontFamily={fontFamily}
               onClick={() => {}} 
               template={template}
+              gradientFrom={gradientFrom}
+              gradientTo={gradientTo}
             />
           ))}
         </div>
