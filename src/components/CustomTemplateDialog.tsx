@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -18,7 +17,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Form, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { Palette, Type, Square, LayoutPanelLeft, GradientIcon, Brush } from "lucide-react";
+import { Palette, Type, Square, Brush } from "lucide-react";
 import { LivePreview } from "@/components/LivePreview";
 
 // Define the GradientIcon component since it doesn't exist in lucide-react

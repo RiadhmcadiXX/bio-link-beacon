@@ -30,6 +30,8 @@ interface ProfileLinkProps {
   template?: string;
   buttonStyle?: string;
   fontFamily?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
 }
 
 export const ProfileLink = ({ 
@@ -38,7 +40,9 @@ export const ProfileLink = ({
   onClick, 
   template = 'default',
   buttonStyle = 'default',
-  fontFamily = 'default'
+  fontFamily = 'default',
+  gradientFrom,
+  gradientTo
 }: ProfileLinkProps) => {
   // Function to render icon based on link.icon
   const renderIcon = () => {
