@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
 
 // Define types for our data
 interface Profile {
@@ -39,19 +39,19 @@ interface Link {
 }
 
 const Dashboard = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
   const [editingLink, setEditingLink] = useState<Partial<Link> | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) {
       navigate("/login");
     }
-  }, [user, loading, navigate]);
+  }, [user, isLoading, navigate]);
 
-  if (loading) return <div className="h-screen flex justify-center items-center">Loading...</div>;
+  if (isLoading) return <div className="h-screen flex justify-center items-center">Loading...</div>;
 
   if (!user) return null;
 
