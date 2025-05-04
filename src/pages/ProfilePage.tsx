@@ -17,6 +17,7 @@ interface Profile {
   template: string | null;
   button_style: string | null;
   font_family: string | null;
+  sections_layout: Record<string, string> | null;
 }
 
 interface Link {
@@ -26,6 +27,10 @@ interface Link {
   icon: string;
   linkType?: string;
   clicks: number;
+  section?: string;
+  description?: string;
+  imageUrl?: string;
+  price?: string;
 }
 
 const ProfilePage = () => {
@@ -245,6 +250,37 @@ const ProfilePage = () => {
 
   const templateStyles = getTemplateStyles();
 
+  // Group links by section
+  const groupLinksBySection = () => {
+    if (!links) return {};
+    
+    const sections: Record<string, Link[]> = {};
+    
+    links.forEach(link => {
+      const section = link.section || 'default';
+      if (!sections[section]) {
+        sections[section] = [];
+      }
+      sections[section].push(link);
+    });
+    
+    return sections;
+  };
+  
+  const sectionedLinks = groupLinksBySection();
+  
+  // Get section layout
+  const getSectionLayout = (sectionName: string): string => {
+    if (!profile.sections_layout) return 'list';
+    return profile.sections_layout[sectionName] || 'list';
+  };
+
+  // Get section title display
+  const getSectionTitle = (sectionName: string): string => {
+    if (sectionName === 'default') return '';
+    return sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+  };
+
   return (
     <div className={`min-h-screen ${templateStyles.background} py-12 px-4`}>
       <div className={templateStyles.container}>
@@ -281,14 +317,10 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {/* Links */}
-        <div className={templateStyles.links}>
-          {linksLoading ? (
-            Array(3).fill(0).map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-            ))
-          ) : links && links.length > 0 ? (
-            links.map((link) => (
+        {/* Social Icons (if any) */}
+        {sectionedLinks['social'] && (
+          <div className="flex justify-center flex-wrap my-6">
+            {sectionedLinks['social'].map((link) => (
               <ProfileLink 
                 key={link.id} 
                 link={link} 
@@ -296,15 +328,81 @@ const ProfilePage = () => {
                 template={profile.template || 'default'}
                 buttonStyle={templateStyles.buttonStyle}
                 fontFamily={templateStyles.fontFamily}
-                onClick={() => handleLinkClick(link.id)} 
+                onClick={() => handleLinkClick(link.id)}
+                layout="icons"
               />
-            ))
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">No links yet</p>
+            ))}
+          </div>
+        )}
+
+        {/* Sections */}
+        {Object.entries(sectionedLinks).map(([sectionName, sectionLinks]) => {
+          if (sectionName === 'social') return null; // Already handled above
+          
+          const layout = getSectionLayout(sectionName);
+          const sectionTitle = getSectionTitle(sectionName);
+          const isProducts = sectionName === 'products';
+          
+          return (
+            <div key={sectionName} className="mb-8">
+              {/* Section Title */}
+              {sectionTitle && (
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold">{sectionTitle}</h2>
+                  {isProducts && (
+                    <p className="text-sm text-gray-500">Explore our products</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Section Links */}
+              {layout === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sectionLinks.map((link, index) => (
+                    <ProfileLink 
+                      key={link.id} 
+                      link={link} 
+                      themeColor={templateStyles.themeColor}
+                      template={profile.template || 'default'}
+                      buttonStyle={templateStyles.buttonStyle}
+                      fontFamily={templateStyles.fontFamily}
+                      onClick={() => handleLinkClick(link.id)}
+                      layout="grid"
+                      isProduct={isProducts}
+                      cardIndex={index}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className={templateStyles.links}>
+                  {sectionLinks.map((link) => (
+                    <ProfileLink 
+                      key={link.id} 
+                      link={link} 
+                      themeColor={templateStyles.themeColor}
+                      template={profile.template || 'default'}
+                      buttonStyle={templateStyles.buttonStyle}
+                      fontFamily={templateStyles.fontFamily}
+                      onClick={() => handleLinkClick(link.id)}
+                      isProduct={isProducts}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })}
+
+        {/* Show loading or no links message if needed */}
+        {linksLoading ? (
+          Array(3).fill(0).map((_, i) => (
+            <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))
+        ) : links && links.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500">No links yet</p>
+          </div>
+        ) : null}
 
         {/* Footer */}
         <div className="mt-12 text-center">
