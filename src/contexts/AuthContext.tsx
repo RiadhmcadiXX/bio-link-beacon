@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,125 +37,150 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  console.log("AuthProvider rendering with state:", { user, isLoading });
+
   useEffect(() => {
     let mounted = true;
 
-    const checkSession = async () => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log("Auth state change:", event);
+        
+        if (!mounted) return;
+
+        if (newSession?.user) {
+          setSession(newSession);
+
+          // Use setTimeout to avoid Supabase deadlock
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("username")
+                .eq("id", newSession.user.id)
+                .maybeSingle();
+
+              if (mounted) {
+                setUser({
+                  ...newSession.user,
+                  username: profile?.username ?? undefined,
+                });
+              }
+            } catch (err) {
+              console.error("Error fetching profile:", err);
+              if (mounted) {
+                setUser(newSession.user);
+              }
+            }
+          }, 0);
+        } else {
+          setUser(null);
+          setSession(null);
+        }
+        
+        if (mounted) setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    const initializeAuth = async () => {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
-        const currentSession = sessionData?.session ?? null;
+        const currentSession = sessionData?.session;
+
+        console.log("Initial session check:", { hasSession: !!currentSession });
 
         if (!mounted) return;
 
-        if (!currentSession || !currentSession.user) {
-          // Invalid session, force sign-out
-          console.warn("Invalid session: signing out");
-          await supabase.auth.signOut();
-          setUser(null);
-          setSession(null);
-          navigate("/login");
-          return;
+        if (currentSession?.user) {
+          setSession(currentSession);
+          
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", currentSession.user.id)
+              .maybeSingle();
+
+            if (mounted) {
+              setUser({
+                ...currentSession.user,
+                username: profile?.username ?? undefined,
+              });
+            }
+          } catch (err) {
+            console.error("Error fetching initial profile:", err);
+            if (mounted) {
+              setUser(currentSession.user);
+            }
+          }
         }
-
-        setSession(currentSession);
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", currentSession.user.id)
-          .single();
-
-        const extendedUser: ExtendedUser = {
-          ...currentSession.user,
-          username: profile?.username ?? undefined,
-        };
-
-        setUser(extendedUser);
       } catch (err) {
-        console.error("Error checking session", err);
-        await supabase.auth.signOut();
-        setUser(null);
-        setSession(null);
-        navigate("/login");
+        console.error("Error checking session:", err);
       } finally {
         if (mounted) setIsLoading(false);
       }
     };
 
-    // Auth change listener
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth event:", event);
-
-        if (!mounted) return;
-
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("username")
-            .eq("id", session.user.id)
-            .single();
-
-          setUser({
-            ...session.user,
-            username: profile?.username ?? undefined,
-          });
-
-          setSession(session);
-        } else {
-          setUser(null);
-          setSession(null);
-        }
-
-        setIsLoading(false);
-      }
-    );
-
-    checkSession();
+    initializeAuth();
 
     return () => {
       mounted = false;
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message || "Login failed");
-      throw error;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message || "Login failed");
+        throw error;
+      }
+      toast.success("Login successful");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
     }
-    navigate("/dashboard");
-    setIsLoading(false);
   };
 
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username },
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username },
+        },
+      });
 
-    if (error) {
-      toast.error(error.message || "Signup failed");
-      throw error;
+      if (error) {
+        toast.error(error.message || "Signup failed");
+        throw error;
+      }
+
+      toast.success("Check your email to verify.");
+    } catch (error) {
+      console.error("Signup error:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    toast.success("Check your email to verify.");
-    setIsLoading(false);
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    navigate("/login");
-    setIsLoading(false);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (

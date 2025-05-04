@@ -1,24 +1,21 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { MobileNav } from "@/components/MobileNav";
-import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuthContext();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!isLoading && isAuthenticated) {
       navigate("/dashboard");
     }
-  }, [user, loading, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
-  
+  if (isLoading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
   
   console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
   
