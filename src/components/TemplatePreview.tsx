@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -287,7 +286,7 @@ export const TemplatePreview = ({
                         themeColor={getThemeColor()}
                         buttonStyle={getButtonStyle()}
                         fontFamily={getFontFamily()}
-                        onClick={() => handleLinkClick()} 
+                        onClick={handleLinkClick} 
                         template={template}
                         gradientFrom={profile.gradientFrom || undefined}
                         gradientTo={profile.gradientTo || undefined}

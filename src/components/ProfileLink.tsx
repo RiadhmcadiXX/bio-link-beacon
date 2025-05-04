@@ -76,6 +76,14 @@ export const ProfileLink = ({
 
   // Get theme-based styles
   const getThemeStyles = () => {
+    // Check if themeColor is a hex color
+    if (themeColor.startsWith('#')) {
+      return { 
+        bg: 'bg-white/10 hover:bg-white/20', 
+        text: 'text-gray-800' 
+      };
+    }
+
     switch (themeColor) {
       case 'blue':
         return { bg: 'bg-brand-blue/10 hover:bg-brand-blue/20', text: 'text-brand-blue' };
@@ -106,6 +114,9 @@ export const ProfileLink = ({
       case 'outline':
         return "bg-transparent border-2 border-current";
       case 'gradient':
+        if (gradientFrom && gradientTo) {
+          return "text-white"; // Custom gradient handled via inline style
+        }
         return `bg-gradient-to-r ${
           themeColor === 'purple' ? 'from-purple-500 to-pink-500' :
           themeColor === 'blue' ? 'from-blue-500 to-cyan-400' :
@@ -132,6 +143,36 @@ export const ProfileLink = ({
         return "font-bold tracking-wide";
       case 'handwritten':
         return "italic";
+      case 'inter':
+        return "font-inter";
+      case 'roboto':
+        return "font-roboto";
+      case 'poppins':
+        return "font-poppins";
+      case 'montserrat':
+        return "font-montserrat";
+      case 'raleway':
+        return "font-raleway";
+      case 'playfair':
+        return "font-playfair";
+      case 'lobster':
+        return "font-lobster";
+      case 'pacifico':
+        return "font-pacifico";
+      case 'oswald':
+        return "font-oswald";
+      case 'lato':
+        return "font-lato";
+      case 'merriweather':
+        return "font-merriweather";
+      case 'dancing':
+        return "font-dancing";
+      case 'quicksand':
+        return "font-quicksand";
+      case 'comfortaa':
+        return "font-comfortaa";
+      case 'nunito':
+        return "font-nunito";
       default:
         return "font-sans";
     }
@@ -161,6 +202,22 @@ export const ProfileLink = ({
   const templateSpecificStyles = getTemplateStyles();
   const fontFamilyClasses = getFontFamilyClasses();
 
+  // Get gradient style for the button if using gradient
+  const getGradientStyle = () => {
+    if (buttonStyle === 'gradient' && gradientFrom && gradientTo) {
+      return {
+        background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`
+      };
+    }
+    // If using a custom color as theme
+    if (themeColor.startsWith('#')) {
+      return {
+        backgroundColor: themeColor
+      };
+    }
+    return {};
+  };
+
   return (
     <a 
       href={link.url} 
@@ -171,6 +228,7 @@ export const ProfileLink = ({
         onClick();
         // Let the default navigation happen
       }}
+      style={getGradientStyle()}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">

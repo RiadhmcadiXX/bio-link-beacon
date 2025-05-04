@@ -41,7 +41,6 @@ export const LivePreview = ({
   gradientFrom,
   gradientTo
 }: LivePreviewProps) => {
-  
   // Generate styles based on template
   const getTemplateStyles = () => {
     switch (template) {
@@ -188,6 +187,9 @@ export const LivePreview = ({
   
   const fontClass = fontClassMap[fontFamily] || "font-sans";
 
+  // Determine the effective theme color
+  const effectiveThemeColor = customColor || themeColor;
+
   return (
     <div 
       className={`rounded-md overflow-hidden h-full ${styles.background}`}
@@ -221,11 +223,11 @@ export const LivePreview = ({
             <ProfileLink 
               key={link.id} 
               link={link} 
-              themeColor={customColor ? customColor : themeColor}
-              buttonStyle={buttonStyle}
-              fontFamily={fontFamily}
+              themeColor={effectiveThemeColor}
               onClick={() => {}} 
               template={template}
+              buttonStyle={buttonStyle}
+              fontFamily={fontFamily}
               gradientFrom={gradientFrom}
               gradientTo={gradientTo}
             />
