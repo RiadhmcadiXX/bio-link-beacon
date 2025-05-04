@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +16,7 @@ interface Profile {
   template: string | null;
   button_style: string | null;
   font_family: string | null;
-  sections_layout: Record<string, string> | null;
+  sections_layout?: Record<string, string> | null; // Make this property optional with ?
 }
 
 interface Link {

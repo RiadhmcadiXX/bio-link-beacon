@@ -49,6 +49,7 @@ const useFormField = () => {
   
   if (!formContext || !fieldContext) {
     // Return default/fallback values if not in a form context
+    // Adding error property to fix TypeScript errors
     return {
       id: itemContext?.id || "",
       name: "",
@@ -58,6 +59,7 @@ const useFormField = () => {
       invalid: false,
       isDirty: false,
       isTouched: false,
+      error: undefined, // Add error property with undefined value
     }
   }
   
