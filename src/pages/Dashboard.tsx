@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Link2, Pencil, Trash2, Copy, ExternalLink, Settings, BarChart3 } from "lucide-react";
+import { Link2, Pencil, Trash2, Copy, ExternalLink, Settings, BarChart3, DragVertical } from "lucide-react";
 import { DashboardNav } from "@/components/DashboardNav";
 import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
@@ -15,6 +14,7 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 // Define types for our data
 interface Profile {
@@ -188,6 +188,37 @@ const Dashboard = () => {
       toast.error("Failed to delete link");
     }
   });
+  
+  // New mutation for updating link order
+  const updateLinkOrder = useMutation({
+    mutationFn: async (updatedLinks: Link[]) => {
+      if (!user) throw new Error("Not authenticated");
+      
+      // Update each link with its new position
+      const updates = updatedLinks.map((link, index) => ({
+        id: link.id,
+        position: index
+      }));
+      
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('links')
+          .update({ position: update.position })
+          .eq('id', update.id)
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+      toast.success("Link order updated successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to update link order:", error);
+      toast.error("Failed to update link order");
+    }
+  });
 
   // Get profile URL for sharing
   const profileUrl = profileData ? `${window.location.origin}/${profileData.username}` : '';
@@ -239,6 +270,45 @@ const Dashboard = () => {
         avatar_url: url
       });
     }
+  };
+
+  // Handle drag and drop reordering
+  const handleDragEnd = (result: any) => {
+    if (!result.destination || !links) return;
+    
+    const items = Array.from(links);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update the links in the UI immediately via cache
+    queryClient.setQueryData(['links', user?.id], items);
+    
+    // Update the database
+    updateLinkOrder.mutate(items);
+  };
+  
+  // Handle manual reordering with up/down buttons
+  const handleMoveLink = (index: number, direction: 'up' | 'down') => {
+    if (!links) return;
+    
+    const items = Array.from(links);
+    
+    if (direction === 'up' && index > 0) {
+      // Swap with previous item
+      [items[index - 1], items[index]] = [items[index], items[index - 1]];
+    } else if (direction === 'down' && index < items.length - 1) {
+      // Swap with next item
+      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+    } else {
+      // Can't move further in that direction
+      return;
+    }
+    
+    // Update the links in the UI immediately via cache
+    queryClient.setQueryData(['links', user?.id], items);
+    
+    // Update the database
+    updateLinkOrder.mutate(items);
   };
 
   if (isProfileLoading) {
@@ -315,6 +385,10 @@ const Dashboard = () => {
                 <Link2 className="h-4 w-4 mr-2" />
                 Links
               </TabsTrigger>
+              <TabsTrigger value="arrange">
+                <DragVertical className="h-4 w-4 mr-2" />
+                Arrange Links
+              </TabsTrigger>
               <TabsTrigger value="appearance">
                 <Settings className="h-4 w-4 mr-2" />
                 Appearance
@@ -349,16 +423,96 @@ const Dashboard = () => {
                 </Card>
               ) : (
                 <div className="grid gap-3">
-                  {links && links.map((link) => (
+                  {links && links.map((link, index) => (
                     <LinkItem
                       key={link.id}
                       link={link}
                       onEdit={() => handleEditLink(link)}
                       onDelete={() => handleDeleteLink(link.id)}
+                      onMoveUp={() => handleMoveLink(index, 'up')}
+                      onMoveDown={() => handleMoveLink(index, 'down')}
+                      isFirst={index === 0}
+                      isLast={index === links.length - 1}
                     />
                   ))}
                 </div>
               )}
+            </TabsContent>
+            
+            {/* Arrange Links Tab */}
+            <TabsContent value="arrange" className="space-y-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="text-lg font-medium mb-4">Drag and drop your links to reorder them</h3>
+                  {links && links.length > 0 ? (
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId="links">
+                        {(provided) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="space-y-2"
+                          >
+                            {links.map((link, index) => (
+                              <Draggable key={link.id} draggableId={link.id} index={index}>
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="border border-gray-200 bg-white rounded-md p-3 flex items-center justify-between"
+                                  >
+                                    <div className="flex items-center">
+                                      <div 
+                                        {...provided.dragHandleProps}
+                                        className="mr-3 cursor-move text-gray-400 hover:text-gray-600"
+                                      >
+                                        <DragVertical className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium">{link.title}</p>
+                                        <p className="text-sm text-gray-500 truncate max-w-[250px]">{link.url}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex space-x-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => handleMoveLink(index, 'up')}
+                                        disabled={index === 0}
+                                      >
+                                        ↑
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => handleMoveLink(index, 'down')}
+                                        disabled={index === links.length - 1}
+                                      >
+                                        ↓
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  ) : (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500">No links to arrange</p>
+                      <Button
+                        onClick={handleAddLink}
+                        className="mt-4 bg-brand-purple hover:bg-brand-purple/90"
+                      >
+                        Add Your First Link
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Appearance Tab */}

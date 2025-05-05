@@ -16,7 +16,9 @@ import {
   ShoppingCart,
   Package,
   Pencil, 
-  Trash2 
+  Trash2,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 interface LinkItemProps {
@@ -30,9 +32,21 @@ interface LinkItemProps {
   };
   onEdit: () => void;
   onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-export const LinkItem = ({ link, onEdit, onDelete }: LinkItemProps) => {
+export const LinkItem = ({ 
+  link, 
+  onEdit, 
+  onDelete, 
+  onMoveUp, 
+  onMoveDown,
+  isFirst,
+  isLast
+}: LinkItemProps) => {
   // Function to render icon based on link.icon
   const renderIcon = () => {
     switch (link.icon) {
@@ -100,6 +114,30 @@ export const LinkItem = ({ link, onEdit, onDelete }: LinkItemProps) => {
             <p className="text-xs text-gray-500">clicks</p>
           </div>
           <div className="flex space-x-1">
+            {onMoveUp && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onMoveUp}
+                disabled={isFirst}
+                className="text-gray-500 hover:text-gray-700"
+                title="Move up"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+            )}
+            {onMoveDown && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onMoveDown}
+                disabled={isLast}
+                className="text-gray-500 hover:text-gray-700"
+                title="Move down"
+              >
+                <ArrowDown className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
             </Button>
