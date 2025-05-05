@@ -17,8 +17,8 @@ import {
   Package,
   Pencil, 
   Trash2,
-  ArrowUp,
-  ArrowDown
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 interface LinkItemProps {
@@ -123,7 +123,7 @@ export const LinkItem = ({
                 className="text-gray-500 hover:text-gray-700"
                 title="Move up"
               >
-                <ArrowUp className="h-4 w-4" />
+                <ChevronUp className="h-4 w-4" />
               </Button>
             )}
             {onMoveDown && (
@@ -135,7 +135,7 @@ export const LinkItem = ({
                 className="text-gray-500 hover:text-gray-700"
                 title="Move down"
               >
-                <ArrowDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={onEdit}>

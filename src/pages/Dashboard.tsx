@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Link2, Pencil, Trash2, Copy, ExternalLink, Settings, BarChart3, DragVertical } from "lucide-react";
+import { Link2, Pencil, Trash2, Copy, ExternalLink, Settings, BarChart3, ChevronsUpDown } from "lucide-react";
 import { DashboardNav } from "@/components/DashboardNav";
 import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
@@ -36,6 +36,7 @@ interface Link {
   icon: string;
   clicks: number;
   created_at: string;
+  position?: number; // Make position optional to support the ordering functionality
 }
 
 const Dashboard = () => {
@@ -386,7 +387,7 @@ const Dashboard = () => {
                 Links
               </TabsTrigger>
               <TabsTrigger value="arrange">
-                <DragVertical className="h-4 w-4 mr-2" />
+                <ChevronsUpDown className="h-4 w-4 mr-2" />
                 Arrange Links
               </TabsTrigger>
               <TabsTrigger value="appearance">
@@ -466,7 +467,7 @@ const Dashboard = () => {
                                         {...provided.dragHandleProps}
                                         className="mr-3 cursor-move text-gray-400 hover:text-gray-600"
                                       >
-                                        <DragVertical className="h-5 w-5" />
+                                        <ChevronsUpDown className="h-5 w-5" />
                                       </div>
                                       <div>
                                         <p className="font-medium">{link.title}</p>
