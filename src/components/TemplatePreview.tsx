@@ -217,9 +217,9 @@ export const TemplatePreview = ({
     }
     
     switch (template) {
-      case 'elegant-dark': return 'serif';
+      case 'elegant-dark': return 'roboto';
       case 'gradient': return 'display';
-      case 'bubbles': return 'handwritten';
+      case 'bubbles': return 'lobster';
       case 'modern': return 'mono';
       default: return 'default';
     }

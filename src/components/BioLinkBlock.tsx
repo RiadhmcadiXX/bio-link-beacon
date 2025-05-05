@@ -11,10 +11,11 @@ export const BioLinkBlock = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   
   // Extract username from user metadata or use email as fallback
-  const username = user?.user_metadata?.username || 
-                   (user?.email ? user.email.split('@')[0] : 'my-profile');
+  const username = user?.username;
   
   const profileUrl = `/${username}`;
+
+  //(user?.email ? user.email.split('@')[0] : 'my-profile')
   
   return (
     <div className="w-full bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 p-3 border-b">

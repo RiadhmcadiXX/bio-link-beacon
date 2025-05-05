@@ -50,6 +50,29 @@ export const TemplateCard = ({
     }
   };
 
+  const fontClassMap: Record<string, string> = {
+    inter: "font-inter",
+    roboto: "font-roboto",
+    poppins: "font-poppins",
+    montserrat: "font-montserrat",
+    raleway: "font-raleway",
+    playfair: "font-playfair",
+    lobster: "font-lobster",
+    pacifico: "font-pacifico",
+    oswald: "font-oswald",
+    lato: "font-lato",
+    merriweather: "font-merriweather",
+    dancing: "font-dancing",
+    quicksand: "font-quicksand",
+    comfortaa: "font-comfortaa",
+    nunito: "font-nunito",
+    serif: "font-serif",
+    mono: "font-mono",
+    display: "font-extrabold tracking-wide",
+    handwritten: "italic",
+    default: "font-sans",
+  };
+
   // Sample font styles
   const getFontStyle = () => {
     switch (fontFamily) {
@@ -60,7 +83,7 @@ export const TemplateCard = ({
       case "display":
         return "font-bold tracking-wide";
       case "handwritten":
-        return "italic";
+        return "font-lobster";
       default:
         return "font-sans";
     }
@@ -73,17 +96,18 @@ export const TemplateCard = ({
           <Check className="h-4 w-4" />
         </div>
       )}
-      <div className="h-40 overflow-hidden">
+      <div className="aspect-[400/521] w-full overflow-hidden rounded-md shadow">
         <img
           src={previewImage}
           alt={`${name} template`}
           className="w-full h-full object-cover transition-transform hover:scale-105"
+          onClick={onPreview}
         />
       </div>
       <div className="p-4 flex flex-col flex-1">
         <h3 className={`font-medium text-lg ${getFontStyle()}`}>{name}</h3>
         <p className="text-gray-500 text-sm mt-1 mb-4 flex-grow">{description}</p>
-        
+
         {/* Button style preview */}
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-2">Button preview:</p>
@@ -94,16 +118,16 @@ export const TemplateCard = ({
             Sample Button
           </Button>
         </div>
-        
+
         <div className="flex gap-2 mt-auto">
-          <Button 
-            variant="outline" 
-            className="flex-1" 
+          <Button
+            variant="outline"
+            className="flex-1"
             onClick={onPreview}
           >
             <Eye className="h-4 w-4 mr-1" /> Preview
           </Button>
-          
+
           {isCustomizable && onCustomize ? (
             <Button
               variant="outline"
@@ -113,7 +137,7 @@ export const TemplateCard = ({
               <Palette className="h-4 w-4 mr-1" /> Customize
             </Button>
           ) : (
-            <Button 
+            <Button
               className={`flex-1 ${isActive ? 'bg-gray-400' : 'bg-brand-purple hover:bg-brand-purple/90'}`}
               onClick={onSelect}
               disabled={isActive}
