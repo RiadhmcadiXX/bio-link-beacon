@@ -41,7 +41,8 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
     url: "",
     icon: "link",
     linkType: "general",
-    clicks: 0
+    clicks: 0,
+    position: 0
   });
 
   useEffect(() => {
@@ -52,7 +53,8 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
         url: link.url || "",
         icon: link.icon || "link",
         linkType: link.linkType || "general",
-        clicks: link.clicks || 0
+        clicks: link.clicks || 0,
+        position: link.position || 0
       });
     }
   }, [link]);
