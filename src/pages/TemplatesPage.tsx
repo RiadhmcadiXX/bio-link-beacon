@@ -67,7 +67,7 @@ const templates = [
     id: 'gradient',
     name: 'Gradient',
     description: 'A vibrant background with gradient colors that pop.',
-    previewImage: 'https://via.placeholder.com/300x200/8a2be2/ffffff?text=Gradient',
+    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//gradient%20template%20pink.png',
     buttonStyle: 'gradient',
     fontFamily: 'display',
   },

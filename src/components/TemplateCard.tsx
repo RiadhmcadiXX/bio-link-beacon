@@ -96,11 +96,11 @@ export const TemplateCard = ({
           <Check className="h-4 w-4" />
         </div>
       )}
-      <div className="aspect-[400/521] w-full overflow-hidden rounded-md shadow">
+      <div className="aspect-[400/521] max-h-52 w-full overflow-hidden rounded-md shadow ">
         <img
           src={previewImage}
           alt={`${name} template`}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
+          className="w-full h-full object-cover transition-transform hover:scale-105 "
           onClick={onPreview}
         />
       </div>

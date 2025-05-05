@@ -88,13 +88,16 @@ const Dashboard = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+      
       setIsDialogOpen(false);
       toast.success(editingLink?.id ? "Link updated successfully!" : "Link added successfully!");
     },
     onError: (error) => {
       console.error("Failed to save link:", error);
       toast.error("Failed to save link");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
     }
   });
 
@@ -112,12 +115,15 @@ const Dashboard = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+
       toast.success("Link deleted successfully!");
     },
     onError: (error) => {
       console.error("Failed to delete link:", error);
       toast.error("Failed to delete link");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
     }
   });
 
