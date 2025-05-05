@@ -4,6 +4,7 @@ import { DashboardNav } from './DashboardNav';
 import { MobileNav } from './MobileNav';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { BioLinkBlock } from './BioLinkBlock';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,13 +22,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <DashboardNav />
-      <div className="flex-1">
-        <MobileNav />
-        <main className="flex-1">
-          {children}
-        </main>
+    <div className="flex flex-col min-h-screen bg-background">
+      <BioLinkBlock />
+      <div className="flex flex-1">
+        <DashboardNav />
+        <div className="flex-1">
+          <MobileNav />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
