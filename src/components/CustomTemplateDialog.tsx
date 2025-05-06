@@ -60,6 +60,7 @@ interface CustomTemplateDialogProps {
     customColor?: string;
     gradientFrom?: string;
     gradientTo?: string;
+    animationType?: string;
   };
   profileData?: {
     username: string;
