@@ -14,6 +14,11 @@ import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
 import { TemplateCard } from "@/components/TemplateCard";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { PresetTemplatesTab } from "@/components/templates/PresetTemplatesTab";
+import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
+import { TemplatePreview } from "@/components/TemplatePreview";
+import { CustomTemplateTab } from "@/components/templates/CustomTemplateTab";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Link {
   id: string;
@@ -35,12 +40,71 @@ interface Template {
   fontFamily: string;
 }
 
+// Template data with added customization options
+const templates = [
+  {
+    id: 'default',
+    name: 'Default',
+    description: 'The classic LinkBeacon layout with a clean, simple design.',
+    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template1.png',
+    buttonStyle: 'default',
+    fontFamily: 'default',
+  },
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    description: 'A clean, minimalist design with focus on your content.',
+    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template2.png',
+    buttonStyle: 'minimal',
+    fontFamily: 'default',
+  },
+  {
+    id: 'elegant-dark',
+    name: 'Elegant Dark',
+    description: 'A sophisticated dark theme with a premium feel.',
+    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template3.png',
+    buttonStyle: 'outline',
+    fontFamily: 'lobster',
+  },
+  {
+    id: 'gradient',
+    name: 'Gradient',
+    description: 'A vibrant background with gradient colors that pop.',
+    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//gradient%20template%20pink.png',
+    buttonStyle: 'gradient',
+    fontFamily: 'display',
+  },
+  {
+    id: 'bubbles',
+    name: 'Bubbles',
+    description: 'A fun, playful design with a light blue theme.',
+    previewImage: 'https://via.placeholder.com/300x200/e6f7ff/4a90e2?text=Bubbles',
+    buttonStyle: 'rounded',
+    fontFamily: 'font-lobster',
+  },
+  {
+    id: 'modern',
+    name: 'Modern',
+    description: 'A contemporary layout with a sleek side profile.',
+    previewImage: 'https://via.placeholder.com/300x200/f5f5f5/808080?text=Modern',
+    buttonStyle: 'shadow',
+    fontFamily: 'mono',
+  }
+];
+
 interface Profile {
   id: string;
   username: string;
   display_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  template: string | null;
+  theme: string | null;
+  button_style?: string | null;
+  font_family?: string | null;
+  customColor?: string | null;
+  gradientFrom?: string | null;
+  gradientTo?: string | null;
 }
 
 const Dashboard = () => {
@@ -49,78 +113,81 @@ const Dashboard = () => {
   const [editingLink, setEditingLink] = useState<Link | null>(null);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("links");
+  const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
 
   // Fetch links
   const { data: links, isLoading: linksLoading, error: linksError } = useQuery({
     queryKey: ['links', user?.id],
     queryFn: async () => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { data, error } = await supabase
         .from('links')
         .select('*')
         .eq('user_id', user.id)
         .order('position', { ascending: true });
-        
+
       if (error) throw error;
       return data as Link[];
     },
     enabled: !!user,
   });
 
-  // Fetch templates
-  const { data: templates, isLoading: templatesLoading } = useQuery({
-    queryKey: ['templates'],
-    queryFn: async () => {
-      // In a real app, this would fetch from the database
-      // For now, we'll use mock data
-      return [
-        {
-          id: "template1",
-          name: "Minimalist",
-          description: "Clean and simple design with focus on content",
-          previewImage: "/images/template1.png",
-          isActive: true,
-          isCustomizable: true,
-          buttonStyle: "default",
-          fontFamily: "inter"
-        },
-        {
-          id: "template2",
-          name: "Vibrant",
-          description: "Colorful design with bold elements",
-          previewImage: "/images/template2.png",
-          isActive: false,
-          isCustomizable: true,
-          buttonStyle: "gradient",
-          fontFamily: "poppins"
-        },
-        {
-          id: "template3",
-          name: "Professional",
-          description: "Sophisticated design for business profiles",
-          previewImage: "/images/template3.png",
-          isActive: false,
-          isCustomizable: false,
-          buttonStyle: "outline",
-          fontFamily: "serif"
-        }
-      ];
-    }
-  });
+  // // Fetch templates
+  // const { data: templates, isLoading: templatesLoading } = useQuery({
+  //   queryKey: ['templates'],
+  //   queryFn: async () => {
+  //     // In a real app, this would fetch from the database
+  //     // For now, we'll use mock data
+  //     return [
+  //       {
+  //         id: "template1",
+  //         name: "Minimalist",
+  //         description: "Clean and simple design with focus on content",
+  //         previewImage: "/images/template1.png",
+  //         isActive: true,
+  //         isCustomizable: true,
+  //         buttonStyle: "default",
+  //         fontFamily: "inter"
+  //       },
+  //       {
+  //         id: "template2",
+  //         name: "Vibrant",
+  //         description: "Colorful design with bold elements",
+  //         previewImage: "/images/template2.png",
+  //         isActive: false,
+  //         isCustomizable: true,
+  //         buttonStyle: "gradient",
+  //         fontFamily: "poppins"
+  //       },
+  //       {
+  //         id: "template3",
+  //         name: "Professional",
+  //         description: "Sophisticated design for business profiles",
+  //         previewImage: "/images/template3.png",
+  //         isActive: false,
+  //         isCustomizable: false,
+  //         buttonStyle: "outline",
+  //         fontFamily: "serif"
+  //       }
+  //     ];
+  //   }
+  // });
 
   // Fetch profile
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       if (error) throw error;
       return data as Profile;
     },
@@ -131,7 +198,7 @@ const Dashboard = () => {
   const saveLink = useMutation({
     mutationFn: async (link: Partial<Link>) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       if (link.id) {
         // Update existing link
         const { error } = await supabase
@@ -143,7 +210,7 @@ const Dashboard = () => {
           })
           .eq('id', link.id)
           .eq('user_id', user.id);
-        
+
         if (error) throw error;
       } else {
         // Add new link - get the highest position value and add 1
@@ -153,7 +220,7 @@ const Dashboard = () => {
           const maxPosition = Math.max(...links.map(l => l.position || 0));
           newPosition = maxPosition + 1;
         }
-        
+
         // Add new link
         const { error } = await supabase
           .from('links')
@@ -164,7 +231,7 @@ const Dashboard = () => {
             user_id: user.id,
             position: newPosition,
           });
-        
+
         if (error) throw error;
       }
     },
@@ -185,13 +252,13 @@ const Dashboard = () => {
   const deleteLink = useMutation({
     mutationFn: async (linkId: string) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { error } = await supabase
         .from('links')
         .delete()
         .eq('id', linkId)
         .eq('user_id', user.id);
-        
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -210,41 +277,41 @@ const Dashboard = () => {
   const updateLinkOrder = useMutation({
     mutationFn: async ({ linkId, direction }: { linkId: string, direction: 'up' | 'down' }) => {
       if (!user || !links) throw new Error("Not authenticated or no links");
-      
+
       // Find the current link and its index
       const currentIndex = links.findIndex(link => link.id === linkId);
       if (currentIndex === -1) throw new Error("Link not found");
-      
+
       const currentLink = links[currentIndex];
-      
+
       // Determine the target index based on direction
       const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
       if (targetIndex < 0 || targetIndex >= links.length) {
         throw new Error("Cannot move link further");
       }
-      
+
       const targetLink = links[targetIndex];
-      
+
       // Swap positions
       const currentPosition = currentLink.position;
       const targetPosition = targetLink.position;
-      
+
       // Update the current link position
       const { error: error1 } = await supabase
         .from('links')
         .update({ position: targetPosition })
         .eq('id', currentLink.id)
         .eq('user_id', user.id);
-      
+
       if (error1) throw error1;
-      
+
       // Update the target link position
       const { error: error2 } = await supabase
         .from('links')
         .update({ position: currentPosition })
         .eq('id', targetLink.id)
         .eq('user_id', user.id);
-      
+
       if (error2) throw error2;
     },
     onSuccess: () => {
@@ -260,12 +327,12 @@ const Dashboard = () => {
   const updateAvatar = useMutation({
     mutationFn: async (avatarUrl: string) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
         .eq('id', user.id);
-      
+
       if (error) throw error;
       return avatarUrl;
     },
@@ -307,20 +374,105 @@ const Dashboard = () => {
     updateLinkOrder.mutate({ linkId, direction: 'down' });
   };
 
-  const handleTemplateSelect = (templateId: string) => {
-    toast.success(`Template ${templateId} selected`);
-    // In a real app, this would update the user's selected template
+
+  // Template update mutation
+  const updateTemplate = useMutation({
+    mutationFn: async ({
+      template,
+      theme = null,
+      buttonStyle = null,
+      fontFamily = null,
+      customColor = null,
+      gradientFrom = null,
+      gradientTo = null
+    }: {
+      template: string,
+      theme?: string | null,
+      buttonStyle?: string | null,
+      fontFamily?: string | null,
+      customColor?: string | null,
+      gradientFrom?: string | null,
+      gradientTo?: string | null
+    }) => {
+      if (!user) throw new Error("Not authenticated");
+
+      const updateData: any = { template };
+
+      // Only include these fields if they are provided
+      if (theme !== null) updateData.theme = theme;
+      if (buttonStyle !== null) updateData.button_style = buttonStyle;
+      if (fontFamily !== null) updateData.font_family = fontFamily;
+      if (customColor !== null) updateData.custom_color = customColor;
+      if (gradientFrom !== null) updateData.gradient_from = gradientFrom;
+      if (gradientTo !== null) updateData.gradient_to = gradientTo;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id);
+
+      if (error) throw error;
+      return template;
+    },
+    onSuccess: (template) => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      toast.success(`Template updated to ${template}!`);
+      setIsPreviewOpen(false);
+      setIsCustomDialogOpen(false);
+    },
+    onError: (error) => {
+      console.error("Failed to update template:", error);
+      toast.error("Failed to update template");
+    }
+  });
+
+  const handlePreviewTemplate = (templateId: string) => {
+    console.log("Previewing template:", templateId);
+    setPreviewTemplate(templateId);
+    setIsPreviewOpen(true);
   };
 
-  const handleTemplatePreview = (templateId: string) => {
-    toast.info(`Previewing template ${templateId}`);
-    // In a real app, this would open a preview dialog
+  const handleApplyTemplate = (templateId: string) => {
+    const selectedTemplate = templates.find(t => t.id === templateId);
+    if (selectedTemplate) {
+      updateTemplate.mutate({
+        template: templateId,
+        buttonStyle: selectedTemplate.buttonStyle,
+        fontFamily: selectedTemplate.fontFamily,
+        // Clear custom settings when applying preset template
+        customColor: null,
+        gradientFrom: null,
+        gradientTo: null
+      });
+    } else {
+      updateTemplate.mutate({ template: templateId });
+    }
   };
 
-  const handleTemplateCustomize = (templateId: string) => {
-    toast.info(`Customizing template ${templateId}`);
-    // In a real app, this would open a customization dialog
+  const handleOpenCustomDialog = () => {
+    setIsCustomDialogOpen(true);
   };
+
+  const handleCustomTemplateSubmit = (customSettings: {
+    theme: string;
+    buttonStyle: string;
+    fontFamily: string;
+    customColor?: string;
+    gradientFrom?: string;
+    gradientTo?: string;
+  }) => {
+    updateTemplate.mutate({
+      template: 'custom',
+      theme: customSettings.theme,
+      buttonStyle: customSettings.buttonStyle,
+      fontFamily: customSettings.fontFamily,
+      customColor: customSettings.customColor,
+      gradientFrom: customSettings.gradientFrom,
+      gradientTo: customSettings.gradientTo
+    });
+  };
+
+
 
   const handleAvatarUpdate = (url: string) => {
     updateAvatar.mutate(url);
@@ -353,18 +505,18 @@ const Dashboard = () => {
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
             </TabsList>
-            
+
             {activeTab === 'links' && (
               <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
                 <Plus className="h-4 w-4 mr-2" /> Add Link
               </Button>
             )}
           </div>
-          
+
           {/* My Links Tab */}
           <TabsContent value="links" className="space-y-4">
             <h1 className="text-2xl font-bold">My Links</h1>
-            
+
             {linksLoading ? (
               <div className="text-center py-6">Loading links...</div>
             ) : linksError ? (
@@ -377,7 +529,7 @@ const Dashboard = () => {
             ) : links && links.length > 0 ? (
               <div className="space-y-3">
                 {links.map((link, index) => (
-                  <LinkItem 
+                  <LinkItem
                     key={link.id}
                     link={link}
                     onEdit={() => handleEditLink(link)}
@@ -398,63 +550,40 @@ const Dashboard = () => {
               </Card>
             )}
           </TabsContent>
-          
+
           {/* Preset Templates Tab */}
-          <TabsContent value="preset-templates" className="space-y-4">
-            <h1 className="text-2xl font-bold">Preset Templates</h1>
-            
-            {templatesLoading ? (
-              <div className="text-center py-6">Loading templates...</div>
-            ) : templates && templates.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {templates.map((template) => (
-                  <TemplateCard
-                    key={template.id}
-                    id={template.id}
-                    name={template.name}
-                    description={template.description}
-                    previewImage={template.previewImage}
-                    isActive={template.isActive}
-                    isCustomizable={template.isCustomizable}
-                    buttonStyle={template.buttonStyle}
-                    fontFamily={template.fontFamily}
-                    onSelect={() => handleTemplateSelect(template.id)}
-                    onPreview={() => handleTemplatePreview(template.id)}
-                    onCustomize={template.isCustomizable ? () => handleTemplateCustomize(template.id) : undefined}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="p-6 text-center">
-                <p>No templates available.</p>
-              </Card>
-            )}
+          <TabsContent value="preset-templates">
+            <PresetTemplatesTab
+              templates={templates}
+              activeTemplateId={profileData?.template ?? null}
+              onApply={handleApplyTemplate}
+              onPreview={handlePreviewTemplate}
+            />
           </TabsContent>
-          
+
           {/* Custom Templates Tab */}
           <TabsContent value="custom-templates" className="space-y-4">
             <h1 className="text-2xl font-bold">Custom Templates</h1>
-            <Card className="p-6 text-center">
-              <p className="mb-4">Create your own custom template</p>
-              <Button className="bg-brand-purple hover:bg-brand-purple/90">
-                <Plus className="h-4 w-4 mr-2" /> Create Custom Template
-              </Button>
-            </Card>
+            <CustomTemplateTab
+              profileData={profileData}
+              onOpenDialog={handleOpenCustomDialog}
+              onPreview={() => setIsPreviewOpen(true)}
+            />
           </TabsContent>
-          
+
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-4">
             <h1 className="text-2xl font-bold">Settings</h1>
-            
+
             {profileLoading ? (
               <div className="text-center py-6">Loading profile settings...</div>
-            ) : profile ? (
+            ) : profileData ? (
               <Card className="p-6">
                 <h2 className="text-xl font-medium mb-4">Profile Image</h2>
                 <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
                   <AvatarUpload
                     userId={user?.id || ''}
-                    existingUrl={profile.avatar_url}
+                    existingUrl={profileData.avatar_url}
                     onAvatarUpdate={handleAvatarUpdate}
                     size="lg"
                   />
@@ -465,13 +594,11 @@ const Dashboard = () => {
                         For more profile settings, please visit the settings page.
                       </p>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setActiveTab('links')}
-                      className="w-full sm:w-auto"
-                    >
-                      Manage Your Links
+
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
+                      <Link to="/settings">Manage Your Profile</Link>
                     </Button>
+
                   </div>
                 </div>
               </Card>
@@ -484,7 +611,7 @@ const Dashboard = () => {
               </Card>
             )}
           </TabsContent>
-          
+
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
             <h1 className="text-2xl font-bold">Analytics</h1>
@@ -507,8 +634,8 @@ const Dashboard = () => {
               ) : (
                 <div className="text-center py-4">
                   <p>No link data available yet.</p>
-                  <Button 
-                    onClick={() => setActiveTab('links')} 
+                  <Button
+                    onClick={() => setActiveTab('links')}
                     className="mt-2 bg-brand-purple hover:bg-brand-purple/90"
                   >
                     Create Your First Link
@@ -518,9 +645,49 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        {/* Template Preview Dialog */}
+        {profileData && (previewTemplate || profileData.template === 'custom') && (
+          <TemplatePreview
+            isOpen={isPreviewOpen}
+            onClose={() => setIsPreviewOpen(false)}
+            template={previewTemplate || profileData.template || 'default'}
+            profile={{
+              ...profileData,
+              customColor: profileData.customColor || null,
+              gradientFrom: profileData.gradientFrom || null,
+              gradientTo: profileData.gradientTo || null
+            }}
+            links={links || []}
+            onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}
+          />
+        )}
+
+        {/* Custom Template Dialog with Live Preview */}
+        {profileData && (
+          <CustomTemplateDialog
+            isOpen={isCustomDialogOpen}
+            onClose={() => setIsCustomDialogOpen(false)}
+            onSubmit={handleCustomTemplateSubmit}
+            initialSettings={{
+              theme: profileData.theme || 'purple',
+              buttonStyle: profileData.button_style || 'default',
+              fontFamily: profileData.font_family || 'default',
+              customColor: profileData.customColor || undefined,
+              gradientFrom: profileData.gradientFrom || undefined,
+              gradientTo: profileData.gradientTo || undefined
+            }}
+            profileData={{
+              username: profileData.username,
+              display_name: profileData.display_name,
+              bio: profileData.bio,
+              avatar_url: profileData.avatar_url
+            }}
+            links={links || []}
+          />
+        )}
       </div>
-      
-      <EditLinkDialog 
+
+      <EditLinkDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         link={editingLink}
