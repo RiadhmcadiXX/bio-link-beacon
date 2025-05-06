@@ -19,8 +19,7 @@ export const ShareBioLinkDialog: React.FC<ShareBioLinkDialogProps> = ({
 }) => {
   const { user } = useAuthContext();
   
-  const username = user?.user_metadata?.username || 
-                  (user?.email ? user.email.split('@')[0] : 'my-profile');
+  const username = user?.username;
   
   const profileUrl = `${window.location.origin}/${username}`;
   const avatarUrl = user?.user_metadata?.avatar_url || null;
