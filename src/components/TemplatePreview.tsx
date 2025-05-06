@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WaveAnimation } from "./animations/WaveAnimation";
 
 interface TemplatePreviewProps {
   isOpen: boolean;
@@ -42,10 +43,10 @@ export const TemplatePreview = ({
   links,
   onApply
 }: TemplatePreviewProps) => {
-  
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  
+
   // Generate preview styles based on template
   const getTemplateStyles = () => {
     switch (template) {
@@ -143,15 +144,14 @@ export const TemplatePreview = ({
             links: 'space-y-3'
           };
         }
-        
+
         const themeColor = profile.theme || 'purple';
         return {
-          background: profile.customColor ? '' : `bg-gradient-to-br ${
-            themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
-            themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
-            themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
-            'from-orange-100 to-orange-200'
-          }`,
+          background: profile.customColor ? '' : `bg-gradient-to-br ${themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
+              themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
+                themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
+                  'from-orange-100 to-orange-200'
+            }`,
           container: 'max-w-md mx-auto px-4 py-8',
           avatar: 'h-20 w-20',
           header: 'text-center mb-6',
@@ -190,10 +190,10 @@ export const TemplatePreview = ({
 
   // Check if template has animation
   const hasAnimation = () => {
-    return template === 'floating-particles' || 
-           template === 'wave-background' || 
-           template === 'gradient-flow' ||
-           (template === 'custom' && profile.animationType);
+    return template === 'floating-particles' ||
+      template === 'wave-background' ||
+      template === 'gradient-flow' ||
+      (template === 'custom' && profile.animationType);
   };
 
   // Get animation type
@@ -201,7 +201,7 @@ export const TemplatePreview = ({
     if (template === 'custom') {
       return profile.animationType;
     }
-    
+
     switch (template) {
       case 'floating-particles': return 'particles';
       case 'wave-background': return 'waves';
@@ -214,10 +214,10 @@ export const TemplatePreview = ({
   const drawParticles = (canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    const particles: Array<{x: number, y: number, size: number, speedX: number, speedY: number, opacity: number}> = [];
+
+    const particles: Array<{ x: number, y: number, size: number, speedX: number, speedY: number, opacity: number }> = [];
     const particleCount = 50;
-    
+
     // Initialize particles
     for (let i = 0; i < particleCount; i++) {
       particles.push({
@@ -229,86 +229,53 @@ export const TemplatePreview = ({
         opacity: Math.random() * 0.5 + 0.1
       });
     }
-    
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // Draw and update particles
       particles.forEach(particle => {
         ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Update position
         particle.x += particle.speedX;
         particle.y += particle.speedY;
-        
+
         // Reset if out of bounds
         if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
       });
-      
+
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animate();
   };
-  
-  // Wave animation
-  const drawWaves = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    let time = 0;
-    const waveColors = ['rgba(41, 121, 255, 0.2)', 'rgba(73, 160, 255, 0.3)', 'rgba(100, 181, 246, 0.4)'];
-    
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw multiple wave layers
-      waveColors.forEach((color, i) => {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height);
-        
-        // Draw wave path
-        for (let x = 0; x < canvas.width; x++) {
-          const y = Math.sin(x * 0.01 + time + i) * 20 + canvas.height / 2 + 40 * i;
-          ctx.lineTo(x, y);
-        }
-        
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.closePath();
-        ctx.fill();
-      });
-      
-      time += 0.05;
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-  };
-  
+
+
+
   // Gradient flow animation
   const drawGradientFlow = (canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     let hue = 0;
     const animate = () => {
       // Create gradient with shifting colors
       const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
       gradient.addColorStop(0, `hsl(${hue}, 100%, 60%)`);
       gradient.addColorStop(1, `hsl(${(hue + 60) % 360}, 100%, 50%)`);
-      
+
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       hue = (hue + 0.5) % 360;
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animate();
   };
 
@@ -318,7 +285,7 @@ export const TemplatePreview = ({
       const canvas = canvasRef.current;
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
-      
+
       const animationType = getAnimationType();
       if (animationType === 'particles') {
         drawParticles(canvas);
@@ -328,7 +295,7 @@ export const TemplatePreview = ({
         drawGradientFlow(canvas);
       }
     }
-    
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -358,16 +325,16 @@ export const TemplatePreview = ({
     handwritten: "italic",
     default: "font-sans",
   };
-  
+
   const styles = getTemplateStyles();
-  
+
 
   // Determine theme color for links based on template or profile theme
   const getThemeColor = () => {
     if (template === 'custom') {
       return profile.customColor || profile.theme || 'purple';
     }
-    
+
     switch (template) {
       case 'elegant-dark': return 'blue';
       case 'gradient': return 'pink';
@@ -385,7 +352,7 @@ export const TemplatePreview = ({
     if (template === 'custom') {
       return profile.button_style || 'default';
     }
-    
+
     switch (template) {
       case 'minimal': return 'minimal';
       case 'elegant-dark': return 'outline';
@@ -404,7 +371,7 @@ export const TemplatePreview = ({
     if (template === 'custom') {
       return profile.font_family || 'default';
     }
-    
+
     switch (template) {
       case 'elegant-dark': return 'roboto';
       case 'gradient': return 'display';
@@ -431,28 +398,29 @@ export const TemplatePreview = ({
           <div className="p-4 border-b flex justify-between items-center">
             <h2 className="font-semibold">
               Preview Template: {
-                template === 'custom' 
-                ? 'Custom' 
-                : template.charAt(0).toUpperCase() + template.slice(1).replace(/-/g, ' ')
+                template === 'custom'
+                  ? 'Custom'
+                  : template.charAt(0).toUpperCase() + template.slice(1).replace(/-/g, ' ')
               }
             </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           <div className="overflow-y-auto flex-1">
-            <div 
+            <div
               className={`${styles.background} min-h-full ${fontClass} relative`}
               style={getCustomBackgroundStyle()}
             >
-              {hasAnimation() && (
-                <canvas 
-                  ref={canvasRef} 
+              {getAnimationType() === 'waves' && <WaveAnimation />}
+              {getAnimationType() !== 'waves' && (
+                <canvas
+                  ref={canvasRef}
                   className="absolute top-0 left-0 w-full h-full"
                 />
               )}
-              
+
               <div className={styles.container}>
                 {template === 'modern' ? (
                   <div className={styles.header}>
@@ -479,13 +447,13 @@ export const TemplatePreview = ({
                 <div className={styles.links}>
                   {links.length > 0 ? (
                     links.map((link) => (
-                      <ProfileLink 
-                        key={link.id} 
-                        link={link} 
+                      <ProfileLink
+                        key={link.id}
+                        link={link}
                         themeColor={getThemeColor()}
                         buttonStyle={getButtonStyle()}
                         fontFamily={getFontFamily()}
-                        onClick={handleLinkClick} 
+                        onClick={handleLinkClick}
                         template={template}
                         gradientFrom={profile.gradientFrom || undefined}
                         gradientTo={profile.gradientTo || undefined}
