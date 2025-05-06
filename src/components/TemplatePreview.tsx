@@ -1,11 +1,12 @@
-
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WaveAnimation } from "./animations/WaveAnimation";
+import { ParticlesAnimation } from "./animations/ParticlesAnimation";
+import { GradientFlowAnimation } from "./animations/GradientFlowAnimation";
 
 interface TemplatePreviewProps {
   isOpen: boolean;
@@ -44,10 +45,6 @@ export const TemplatePreview = ({
   onApply
 }: TemplatePreviewProps) => {
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationRef = useRef<number | null>(null);
-
-  // Generate preview styles based on template
   const getTemplateStyles = () => {
     switch (template) {
       case 'minimal':
@@ -210,98 +207,21 @@ export const TemplatePreview = ({
     }
   };
 
-  // Particles animation
-  const drawParticles = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const particles: Array<{ x: number, y: number, size: number, speedX: number, speedY: number, opacity: number }> = [];
-    const particleCount = 50;
-
-    // Initialize particles
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 5 + 1,
-        speedX: Math.random() * 0.5 - 0.25,
-        speedY: Math.random() * 0.5 - 0.25,
-        opacity: Math.random() * 0.5 + 0.1
-      });
+  // Get animation component based on type
+  const renderAnimationBackground = () => {
+    const animationType = getAnimationType();
+    
+    switch (animationType) {
+      case 'waves':
+        return <WaveAnimation />;
+      case 'particles':
+        return <ParticlesAnimation />;
+      case 'gradientFlow':
+        return <GradientFlowAnimation />;
+      default:
+        return null;
     }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw and update particles
-      particles.forEach(particle => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Update position
-        particle.x += particle.speedX;
-        particle.y += particle.speedY;
-
-        // Reset if out of bounds
-        if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
-        if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
   };
-
-
-
-  // Gradient flow animation
-  const drawGradientFlow = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let hue = 0;
-    const animate = () => {
-      // Create gradient with shifting colors
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, `hsl(${hue}, 100%, 60%)`);
-      gradient.addColorStop(1, `hsl(${(hue + 60) % 360}, 100%, 50%)`);
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      hue = (hue + 0.5) % 360;
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-  };
-
-  // Initialize and cleanup animations
-  useEffect(() => {
-    if (isOpen && hasAnimation() && canvasRef.current) {
-      const canvas = canvasRef.current;
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-
-      const animationType = getAnimationType();
-      if (animationType === 'particles') {
-        drawParticles(canvas);
-      } else if (animationType === 'waves') {
-        drawWaves(canvas);
-      } else if (animationType === 'gradientFlow') {
-        drawGradientFlow(canvas);
-      }
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isOpen, template, profile.animationType]);
 
   const fontClassMap: Record<string, string> = {
     inter: "font-inter",
@@ -413,13 +333,8 @@ export const TemplatePreview = ({
               className={`${styles.background} min-h-full ${fontClass} relative`}
               style={getCustomBackgroundStyle()}
             >
-              {getAnimationType() === 'waves' && <WaveAnimation />}
-              {getAnimationType() !== 'waves' && (
-                <canvas
-                  ref={canvasRef}
-                  className="absolute top-0 left-0 w-full h-full"
-                />
-              )}
+              {/* Render the appropriate animation based on template type */}
+              {renderAnimationBackground()}
 
               <div className={styles.container}>
                 {template === 'modern' ? (

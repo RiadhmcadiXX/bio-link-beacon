@@ -52,6 +52,7 @@ interface CustomTemplateDialogProps {
     customColor?: string;
     gradientFrom?: string;
     gradientTo?: string;
+    animationType?: string;
   }) => void;
   initialSettings: {
     theme: string;
