@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -19,6 +18,7 @@ import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { CustomTemplateTab } from "@/components/templates/CustomTemplateTab";
 import { Link, useNavigate } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 interface Link {
   id: string;
@@ -478,6 +478,69 @@ const Dashboard = () => {
     updateAvatar.mutate(url);
   };
 
+  // Update link order mutation - modified for drag and drop
+  const updateLinksOrder = useMutation({
+    mutationFn: async ({ links }: { links: Link[] }) => {
+      if (!user) throw new Error("Not authenticated or no links");
+
+      // Create an array of update promises
+      const updatePromises = links.map((link, index) => {
+        return supabase
+          .from('links')
+          .update({ position: index })
+          .eq('id', link.id)
+          .eq('user_id', user.id);
+      });
+
+      // Execute all updates
+      const results = await Promise.all(updatePromises);
+      
+      // Check for errors
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        throw new Error("Failed to update one or more link positions");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
+      toast.success("Link order updated successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to update link order:", error);
+      toast.error("Failed to update the link order");
+    }
+  });
+
+  // Handle drag end event
+  const handleDragEnd = (result: any) => {
+    // Dropped outside the list
+    if (!result.destination || !links) {
+      return;
+    }
+
+    // If the position didn't change
+    if (result.destination.index === result.source.index) {
+      return;
+    }
+
+    // Reorder the array
+    const reorderedLinks = Array.from(links);
+    const [removed] = reorderedLinks.splice(result.source.index, 1);
+    reorderedLinks.splice(result.destination.index, 0, removed);
+
+    // Update positions in the UI immediately for better UX
+    const updatedLinks = reorderedLinks.map((link, index) => ({
+      ...link,
+      position: index
+    }));
+
+    // Optimistically update the UI
+    queryClient.setQueryData(['links', user?.id], updatedLinks);
+
+    // Send the update to the server
+    updateLinksOrder.mutate({ links: updatedLinks });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -513,7 +576,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* My Links Tab */}
+          {/* My Links Tab - Updated with drag and drop */}
           <TabsContent value="links" className="space-y-4">
             <h1 className="text-2xl font-bold">My Links</h1>
 
@@ -527,20 +590,41 @@ const Dashboard = () => {
                 </Button>
               </Card>
             ) : links && links.length > 0 ? (
-              <div className="space-y-3">
-                {links.map((link, index) => (
-                  <LinkItem
-                    key={link.id}
-                    link={link}
-                    onEdit={() => handleEditLink(link)}
-                    onDelete={() => handleDeleteLink(link.id)}
-                    onMoveUp={() => handleMoveUp(link.id)}
-                    onMoveDown={() => handleMoveDown(link.id)}
-                    isFirst={index === 0}
-                    isLast={index === links.length - 1}
-                  />
-                ))}
-              </div>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="links-list">
+                  {(provided) => (
+                    <div 
+                      className="space-y-3"
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                    >
+                      {links.map((link, index) => (
+                        <Draggable 
+                          key={link.id} 
+                          draggableId={link.id} 
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                            >
+                              <LinkItem
+                                link={link}
+                                onEdit={() => handleEditLink(link)}
+                                onDelete={() => handleDeleteLink(link.id)}
+                                isDragging={snapshot.isDragging}
+                                dragHandleProps={provided.dragHandleProps}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             ) : (
               <Card className="p-6 text-center">
                 <p className="mb-4">You don't have any links yet.</p>

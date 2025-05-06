@@ -17,8 +17,7 @@ import {
   Package,
   Pencil, 
   Trash2,
-  ChevronUp,
-  ChevronDown
+  GripVertical
 } from "lucide-react";
 
 interface LinkItemProps {
@@ -32,20 +31,16 @@ interface LinkItemProps {
   };
   onEdit: () => void;
   onDelete: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  isFirst?: boolean;
-  isLast?: boolean;
+  isDragging?: boolean;
+  dragHandleProps?: any;
 }
 
 export const LinkItem = ({ 
   link, 
   onEdit, 
-  onDelete, 
-  onMoveUp, 
-  onMoveDown,
-  isFirst,
-  isLast
+  onDelete,
+  isDragging,
+  dragHandleProps
 }: LinkItemProps) => {
   // Function to render icon based on link.icon
   const renderIcon = () => {
@@ -90,9 +85,15 @@ export const LinkItem = ({
   };
 
   return (
-    <Card className="p-4">
+    <Card className={`p-4 ${isDragging ? 'opacity-60' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center">
+          <div 
+            className="mr-2 cursor-grab text-gray-400 hover:text-gray-600" 
+            {...dragHandleProps}
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
           <div className={`w-10 h-10 rounded-md ${getLinkTypeStyles()} flex items-center justify-center mr-4`}>
             {renderIcon()}
           </div>
@@ -114,30 +115,6 @@ export const LinkItem = ({
             <p className="text-xs text-gray-500">clicks</p>
           </div>
           <div className="flex space-x-1">
-            {onMoveUp && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onMoveUp}
-                disabled={isFirst}
-                className="text-gray-500 hover:text-gray-700"
-                title="Move up"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-            )}
-            {onMoveDown && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onMoveDown}
-                disabled={isLast}
-                className="text-gray-500 hover:text-gray-700"
-                title="Move down"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            )}
             <Button variant="ghost" size="sm" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
             </Button>
