@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +25,7 @@ interface Profile {
   customColor?: string | null;
   gradientFrom?: string | null;
   gradientTo?: string | null;
+  animation_type?: string | null;
 }
 
 interface Link {
@@ -37,7 +37,7 @@ interface Link {
   clicks: number;
 }
 
-// Template data with added customization options
+// Template data with added customization options and animations
 const templates = [
   {
     id: 'default',
@@ -86,6 +86,37 @@ const templates = [
     previewImage: 'https://via.placeholder.com/300x200/f5f5f5/808080?text=Modern',
     buttonStyle: 'shadow',
     fontFamily: 'mono',
+  },
+  // New templates with animations
+  {
+    id: 'floating-particles',
+    name: 'Floating Particles',
+    description: 'Elegant background with animated floating particles.',
+    previewImage: 'https://via.placeholder.com/300x200/000022/ffffff?text=Particles',
+    buttonStyle: 'gradient',
+    fontFamily: 'raleway',
+    hasAnimation: true,
+    animationType: 'particles',
+  },
+  {
+    id: 'wave-background',
+    name: 'Wave Background',
+    description: 'Soothing animated wave patterns in the background.',
+    previewImage: 'https://via.placeholder.com/300x200/003366/ffffff?text=Waves',
+    buttonStyle: 'default',
+    fontFamily: 'poppins',
+    hasAnimation: true,
+    animationType: 'waves',
+  },
+  {
+    id: 'gradient-flow',
+    name: 'Gradient Flow',
+    description: 'Smoothly transitioning color gradients that create depth.',
+    previewImage: 'https://via.placeholder.com/300x200/4b0082/ffffff?text=Flow',
+    buttonStyle: 'minimal',
+    fontFamily: 'montserrat',
+    hasAnimation: true,
+    animationType: 'gradientFlow',
   }
 ];
 
@@ -147,7 +178,8 @@ const TemplatesPage = () => {
       fontFamily = null,
       customColor = null,
       gradientFrom = null,
-      gradientTo = null
+      gradientTo = null,
+      animationType = null
     }: { 
       template: string, 
       theme?: string | null, 
@@ -155,7 +187,8 @@ const TemplatesPage = () => {
       fontFamily?: string | null,
       customColor?: string | null,
       gradientFrom?: string | null,
-      gradientTo?: string | null
+      gradientTo?: string | null,
+      animationType?: string | null
     }) => {
       if (!user) throw new Error("Not authenticated");
       
@@ -168,6 +201,7 @@ const TemplatesPage = () => {
       if (customColor !== null) updateData.custom_color = customColor;
       if (gradientFrom !== null) updateData.gradient_from = gradientFrom;
       if (gradientTo !== null) updateData.gradient_to = gradientTo;
+      if (animationType !== null) updateData.animation_type = animationType;
       
       const { error } = await supabase
         .from('profiles')
@@ -201,6 +235,7 @@ const TemplatesPage = () => {
         template: templateId,
         buttonStyle: selectedTemplate.buttonStyle,
         fontFamily: selectedTemplate.fontFamily,
+        animationType: selectedTemplate.hasAnimation ? selectedTemplate.animationType : null,
         // Clear custom settings when applying preset template
         customColor: null,
         gradientFrom: null,
@@ -299,6 +334,8 @@ const TemplatesPage = () => {
                     isActive={profileData?.template === template.id}
                     buttonStyle={template.buttonStyle}
                     fontFamily={template.fontFamily}
+                    hasAnimation={template.hasAnimation}
+                    animationType={template.animationType}
                     onSelect={() => handleApplyTemplate(template.id)}
                     onPreview={() => handlePreviewTemplate(template.id)}
                   />
@@ -351,7 +388,8 @@ const TemplatesPage = () => {
             ...profileData,
             customColor: profileData.customColor || null,
             gradientFrom: profileData.gradientFrom || null,
-            gradientTo: profileData.gradientTo || null
+            gradientTo: profileData.gradientTo || null,
+            animationType: profileData.animation_type || null
           }}
           links={links || []}
           onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}

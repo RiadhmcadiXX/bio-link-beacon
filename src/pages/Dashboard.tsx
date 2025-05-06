@@ -38,9 +38,11 @@ interface Template {
   isCustomizable: boolean;
   buttonStyle: string;
   fontFamily: string;
+  hasAnimation?: boolean;
+  animationType?: string;
 }
 
-// Template data with added customization options
+// Template data with added customization options and animations
 const templates = [
   {
     id: 'default',
@@ -89,6 +91,37 @@ const templates = [
     previewImage: 'https://via.placeholder.com/300x200/f5f5f5/808080?text=Modern',
     buttonStyle: 'shadow',
     fontFamily: 'mono',
+  },
+  // New templates with animations
+  {
+    id: 'floating-particles',
+    name: 'Floating Particles',
+    description: 'Elegant background with animated floating particles.',
+    previewImage: 'https://via.placeholder.com/300x200/000022/ffffff?text=Particles',
+    buttonStyle: 'gradient',
+    fontFamily: 'raleway',
+    hasAnimation: true,
+    animationType: 'particles',
+  },
+  {
+    id: 'wave-background',
+    name: 'Wave Background',
+    description: 'Soothing animated wave patterns in the background.',
+    previewImage: 'https://via.placeholder.com/300x200/003366/ffffff?text=Waves',
+    buttonStyle: 'default',
+    fontFamily: 'poppins',
+    hasAnimation: true,
+    animationType: 'waves',
+  },
+  {
+    id: 'gradient-flow',
+    name: 'Gradient Flow',
+    description: 'Smoothly transitioning color gradients that create depth.',
+    previewImage: 'https://via.placeholder.com/300x200/4b0082/ffffff?text=Flow',
+    buttonStyle: 'minimal',
+    fontFamily: 'montserrat',
+    hasAnimation: true,
+    animationType: 'gradientFlow',
   }
 ];
 
@@ -105,6 +138,7 @@ interface Profile {
   customColor?: string | null;
   gradientFrom?: string | null;
   gradientTo?: string | null;
+  animation_type?: string | null;
 }
 
 const Dashboard = () => {
@@ -134,47 +168,6 @@ const Dashboard = () => {
     },
     enabled: !!user,
   });
-
-  // // Fetch templates
-  // const { data: templates, isLoading: templatesLoading } = useQuery({
-  //   queryKey: ['templates'],
-  //   queryFn: async () => {
-  //     // In a real app, this would fetch from the database
-  //     // For now, we'll use mock data
-  //     return [
-  //       {
-  //         id: "template1",
-  //         name: "Minimalist",
-  //         description: "Clean and simple design with focus on content",
-  //         previewImage: "/images/template1.png",
-  //         isActive: true,
-  //         isCustomizable: true,
-  //         buttonStyle: "default",
-  //         fontFamily: "inter"
-  //       },
-  //       {
-  //         id: "template2",
-  //         name: "Vibrant",
-  //         description: "Colorful design with bold elements",
-  //         previewImage: "/images/template2.png",
-  //         isActive: false,
-  //         isCustomizable: true,
-  //         buttonStyle: "gradient",
-  //         fontFamily: "poppins"
-  //       },
-  //       {
-  //         id: "template3",
-  //         name: "Professional",
-  //         description: "Sophisticated design for business profiles",
-  //         previewImage: "/images/template3.png",
-  //         isActive: false,
-  //         isCustomizable: false,
-  //         buttonStyle: "outline",
-  //         fontFamily: "serif"
-  //       }
-  //     ];
-  //   }
-  // });
 
   // Fetch profile
   const { data: profileData, isLoading: profileLoading } = useQuery({
@@ -374,7 +367,6 @@ const Dashboard = () => {
     updateLinkOrder.mutate({ linkId, direction: 'down' });
   };
 
-
   // Template update mutation
   const updateTemplate = useMutation({
     mutationFn: async ({
@@ -384,7 +376,8 @@ const Dashboard = () => {
       fontFamily = null,
       customColor = null,
       gradientFrom = null,
-      gradientTo = null
+      gradientTo = null,
+      animationType = null,
     }: {
       template: string,
       theme?: string | null,
@@ -392,7 +385,8 @@ const Dashboard = () => {
       fontFamily?: string | null,
       customColor?: string | null,
       gradientFrom?: string | null,
-      gradientTo?: string | null
+      gradientTo?: string | null,
+      animationType?: string | null,
     }) => {
       if (!user) throw new Error("Not authenticated");
 
@@ -405,6 +399,7 @@ const Dashboard = () => {
       if (customColor !== null) updateData.custom_color = customColor;
       if (gradientFrom !== null) updateData.gradient_from = gradientFrom;
       if (gradientTo !== null) updateData.gradient_to = gradientTo;
+      if (animationType !== null) updateData.animation_type = animationType;
 
       const { error } = await supabase
         .from('profiles')
@@ -439,6 +434,7 @@ const Dashboard = () => {
         template: templateId,
         buttonStyle: selectedTemplate.buttonStyle,
         fontFamily: selectedTemplate.fontFamily,
+        animationType: selectedTemplate.hasAnimation ? selectedTemplate.animationType : null,
         // Clear custom settings when applying preset template
         customColor: null,
         gradientFrom: null,
@@ -460,6 +456,7 @@ const Dashboard = () => {
     customColor?: string;
     gradientFrom?: string;
     gradientTo?: string;
+    animationType?: string;
   }) => {
     updateTemplate.mutate({
       template: 'custom',
@@ -468,11 +465,10 @@ const Dashboard = () => {
       fontFamily: customSettings.fontFamily,
       customColor: customSettings.customColor,
       gradientFrom: customSettings.gradientFrom,
-      gradientTo: customSettings.gradientTo
+      gradientTo: customSettings.gradientTo,
+      animationType: customSettings.animationType
     });
   };
-
-
 
   const handleAvatarUpdate = (url: string) => {
     updateAvatar.mutate(url);
@@ -739,7 +735,8 @@ const Dashboard = () => {
               ...profileData,
               customColor: profileData.customColor || null,
               gradientFrom: profileData.gradientFrom || null,
-              gradientTo: profileData.gradientTo || null
+              gradientTo: profileData.gradientTo || null,
+              animationType: profileData.animation_type || null,
             }}
             links={links || []}
             onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}
@@ -758,7 +755,8 @@ const Dashboard = () => {
               fontFamily: profileData.font_family || 'default',
               customColor: profileData.customColor || undefined,
               gradientFrom: profileData.gradientFrom || undefined,
-              gradientTo: profileData.gradientTo || undefined
+              gradientTo: profileData.gradientTo || undefined,
+              animationType: profileData.animation_type || undefined,
             }}
             profileData={{
               username: profileData.username,

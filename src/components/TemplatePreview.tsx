@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
@@ -20,6 +21,7 @@ interface TemplatePreviewProps {
     customColor?: string | null;
     gradientFrom?: string | null;
     gradientTo?: string | null;
+    animationType?: string | null;
   };
   links: Array<{
     id: string;
@@ -40,6 +42,9 @@ export const TemplatePreview = ({
   links,
   onApply
 }: TemplatePreviewProps) => {
+  
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
   
   // Generate preview styles based on template
   const getTemplateStyles = () => {
@@ -92,6 +97,36 @@ export const TemplatePreview = ({
           header: 'text-left mb-8 flex items-center gap-4',
           title: 'text-xl font-bold',
           bio: 'text-sm text-gray-600 mt-1',
+          links: 'space-y-3'
+        };
+      case 'floating-particles':
+        return {
+          background: 'bg-[#000022]',
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          links: 'space-y-3'
+        };
+      case 'wave-background':
+        return {
+          background: 'bg-[#003366]',
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          links: 'space-y-3'
+        };
+      case 'gradient-flow':
+        return {
+          background: 'bg-[#4b0082]',
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
           links: 'space-y-3'
         };
       case 'custom':
@@ -153,6 +188,154 @@ export const TemplatePreview = ({
     return {};
   };
 
+  // Check if template has animation
+  const hasAnimation = () => {
+    return template === 'floating-particles' || 
+           template === 'wave-background' || 
+           template === 'gradient-flow' ||
+           (template === 'custom' && profile.animationType);
+  };
+
+  // Get animation type
+  const getAnimationType = () => {
+    if (template === 'custom') {
+      return profile.animationType;
+    }
+    
+    switch (template) {
+      case 'floating-particles': return 'particles';
+      case 'wave-background': return 'waves';
+      case 'gradient-flow': return 'gradientFlow';
+      default: return null;
+    }
+  };
+
+  // Particles animation
+  const drawParticles = (canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const particles: Array<{x: number, y: number, size: number, speedX: number, speedY: number, opacity: number}> = [];
+    const particleCount = 50;
+    
+    // Initialize particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 5 + 1,
+        speedX: Math.random() * 0.5 - 0.25,
+        speedY: Math.random() * 0.5 - 0.25,
+        opacity: Math.random() * 0.5 + 0.1
+      });
+    }
+    
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw and update particles
+      particles.forEach(particle => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Update position
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+        
+        // Reset if out of bounds
+        if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+        if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+      });
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+  };
+  
+  // Wave animation
+  const drawWaves = (canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    let time = 0;
+    const waveColors = ['rgba(41, 121, 255, 0.2)', 'rgba(73, 160, 255, 0.3)', 'rgba(100, 181, 246, 0.4)'];
+    
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw multiple wave layers
+      waveColors.forEach((color, i) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        
+        // Draw wave path
+        for (let x = 0; x < canvas.width; x++) {
+          const y = Math.sin(x * 0.01 + time + i) * 20 + canvas.height / 2 + 40 * i;
+          ctx.lineTo(x, y);
+        }
+        
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      });
+      
+      time += 0.05;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+  };
+  
+  // Gradient flow animation
+  const drawGradientFlow = (canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    let hue = 0;
+    const animate = () => {
+      // Create gradient with shifting colors
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, `hsl(${hue}, 100%, 60%)`);
+      gradient.addColorStop(1, `hsl(${(hue + 60) % 360}, 100%, 50%)`);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      hue = (hue + 0.5) % 360;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+  };
+
+  // Initialize and cleanup animations
+  useEffect(() => {
+    if (isOpen && hasAnimation() && canvasRef.current) {
+      const canvas = canvasRef.current;
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      
+      const animationType = getAnimationType();
+      if (animationType === 'particles') {
+        drawParticles(canvas);
+      } else if (animationType === 'waves') {
+        drawWaves(canvas);
+      } else if (animationType === 'gradientFlow') {
+        drawGradientFlow(canvas);
+      }
+    }
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isOpen, template, profile.animationType]);
+
   const fontClassMap: Record<string, string> = {
     inter: "font-inter",
     roboto: "font-roboto",
@@ -190,6 +373,9 @@ export const TemplatePreview = ({
       case 'gradient': return 'pink';
       case 'bubbles': return 'blue';
       case 'modern': return 'orange';
+      case 'floating-particles': return 'blue';
+      case 'wave-background': return 'blue';
+      case 'gradient-flow': return 'purple';
       default: return 'purple';
     }
   };
@@ -206,6 +392,9 @@ export const TemplatePreview = ({
       case 'gradient': return 'gradient';
       case 'bubbles': return 'rounded';
       case 'modern': return 'shadow';
+      case 'floating-particles': return 'gradient';
+      case 'wave-background': return 'default';
+      case 'gradient-flow': return 'minimal';
       default: return 'default';
     }
   };
@@ -221,6 +410,9 @@ export const TemplatePreview = ({
       case 'gradient': return 'display';
       case 'bubbles': return 'lobster';
       case 'modern': return 'mono';
+      case 'floating-particles': return 'raleway';
+      case 'wave-background': return 'poppins';
+      case 'gradient-flow': return 'montserrat';
       default: return 'default';
     }
   };
@@ -241,7 +433,7 @@ export const TemplatePreview = ({
               Preview Template: {
                 template === 'custom' 
                 ? 'Custom' 
-                : template.charAt(0).toUpperCase() + template.slice(1)
+                : template.charAt(0).toUpperCase() + template.slice(1).replace(/-/g, ' ')
               }
             </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -251,9 +443,16 @@ export const TemplatePreview = ({
           
           <div className="overflow-y-auto flex-1">
             <div 
-              className={`${styles.background} min-h-full ${fontClass}`}
+              className={`${styles.background} min-h-full ${fontClass} relative`}
               style={getCustomBackgroundStyle()}
             >
+              {hasAnimation() && (
+                <canvas 
+                  ref={canvasRef} 
+                  className="absolute top-0 left-0 w-full h-full"
+                />
+              )}
+              
               <div className={styles.container}>
                 {template === 'modern' ? (
                   <div className={styles.header}>

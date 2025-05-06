@@ -1,3 +1,4 @@
+
 // --- components/TemplateTabs/PresetTemplatesTab.tsx ---
 
 import React from "react";
@@ -10,6 +11,8 @@ interface PresetTemplate {
   previewImage: string;
   buttonStyle: string;
   fontFamily: string;
+  hasAnimation?: boolean;
+  animationType?: string;
 }
 
 interface PresetTemplatesTabProps {
@@ -37,6 +40,8 @@ export const PresetTemplatesTab: React.FC<PresetTemplatesTabProps> = ({
           isActive={activeTemplateId === template.id}
           buttonStyle={template.buttonStyle}
           fontFamily={template.fontFamily}
+          hasAnimation={template.hasAnimation}
+          animationType={template.animationType}
           onSelect={() => onApply(template.id)}
           onPreview={() => onPreview(template.id)}
         />

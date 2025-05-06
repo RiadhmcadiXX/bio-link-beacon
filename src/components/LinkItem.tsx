@@ -85,11 +85,11 @@ export const LinkItem = ({
   };
 
   return (
-    <Card className={`p-4 ${isDragging ? 'opacity-60' : ''}`}>
+    <Card className={`p-4 ${isDragging ? 'opacity-60' : ''} transition-all`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div 
-            className="mr-2 cursor-grab text-gray-400 hover:text-gray-600" 
+            className="mr-2 cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing" 
             {...dragHandleProps}
           >
             <GripVertical className="h-5 w-5" />
