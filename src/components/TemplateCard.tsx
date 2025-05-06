@@ -14,6 +14,8 @@ interface TemplateCardProps {
   isCustomizable?: boolean;
   buttonStyle?: string;
   fontFamily?: string;
+  hasAnimation?: boolean;
+  animationType?: string;
   onSelect: () => void;
   onPreview: () => void;
   onCustomize?: () => void;
@@ -28,6 +30,8 @@ export const TemplateCard = ({
   isCustomizable = false,
   buttonStyle = "default",
   fontFamily = "default",
+  hasAnimation,
+  animationType,
   onSelect,
   onPreview,
   onCustomize,
@@ -118,6 +122,17 @@ export const TemplateCard = ({
             Sample Button
           </Button>
         </div>
+
+        {hasAnimation && (
+          <div className="mb-4">
+            <p className="text-xs text-gray-500 mb-2">
+              <span className="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] mr-1">
+                ✨
+              </span>
+              Includes {animationType} animation
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-2 mt-auto">
           <Button
