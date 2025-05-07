@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { MobileNav } from "@/components/MobileNav";
 import { useEffect } from "react";
+import Spline from "@splinetool/react-spline";
 
 const Index = () => {
   const navigate = useNavigate();
