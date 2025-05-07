@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { WaveAnimation } from "@/components/animations/WaveAnimation";
 import { ParticlesAnimation } from "@/components/animations/ParticlesAnimation";
-import { GradientFlowAnimation } from "@/components/animations/GradientFlowAnimation";
+import { LightBlueToBlue_template } from "@/components/animations/LightBlueToBlue_template";
 
 interface Profile {
   id: string;
@@ -327,7 +327,8 @@ const ProfilePage = () => {
       case 'particles':
         return <ParticlesAnimation />;
       case 'gradientFlow':
-        return <GradientFlowAnimation />;
+        return <LightBlueToBlue_template fromColor="#00B4DB" toColor="#0083B0" speed={0.3} />
+
       default:
         return null;
     }

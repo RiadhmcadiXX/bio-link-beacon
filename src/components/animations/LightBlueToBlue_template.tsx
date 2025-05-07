@@ -7,7 +7,7 @@ interface GradientFlowProps {
   speed?: number; // e.g., 0.5 for slow, 2 for fast
 }
 
-export const GradientFlowAnimation = ({
+export const LightBlueToBlue_template = ({
   fromColor = "#6a11cb",
   toColor = "#2575fc",
   speed = 0.5,
