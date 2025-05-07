@@ -44,6 +44,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          animation_type: string | null
           avatar_url: string | null
           bio: string | null
           button_style: string | null
@@ -57,6 +58,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          animation_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           button_style?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           username: string
         }
         Update: {
+          animation_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           button_style?: string | null
