@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { WaveAnimation } from "./animations/WaveAnimation";
 import { ParticlesAnimation } from "./animations/ParticlesAnimation";
 import { GradientFlowAnimation } from "./animations/GradientFlowAnimation";
+import { LightBlueToBlue_template } from "./animations/LightBlueToBlue_template";
 
 interface TemplatePreviewProps {
   isOpen: boolean;
@@ -119,7 +120,15 @@ export const TemplatePreview = ({
         };
       case 'gradient-flow':
         return {
-          background: 'bg-[#4b0082]',
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          links: 'space-y-3'
+        };
+        case 'blue-flow':
+        return {
           container: 'max-w-md mx-auto px-5 py-8 relative z-10',
           avatar: 'h-20 w-20 ring-2 ring-white/30',
           header: 'text-center mb-6 text-white',
@@ -203,6 +212,7 @@ export const TemplatePreview = ({
       case 'floating-particles': return 'particles';
       case 'wave-background': return 'waves';
       case 'gradient-flow': return 'gradientFlow';
+      case 'gradient-blue-flow': return 'gradientBlueFlow';
       default: return null;
     }
   };
@@ -217,7 +227,9 @@ export const TemplatePreview = ({
       case 'particles':
         return <ParticlesAnimation />;
       case 'gradientFlow':
-        return <GradientFlowAnimation />;
+        return <GradientFlowAnimation/>;
+      case 'gradientBlueFlow':
+        return <LightBlueToBlue_template/>;
       default:
         return null;
     }
@@ -263,6 +275,7 @@ export const TemplatePreview = ({
       case 'floating-particles': return 'blue';
       case 'wave-background': return 'blue';
       case 'gradient-flow': return 'purple';
+      case 'gradient-blue-flow': return 'blue';
       default: return 'purple';
     }
   };
@@ -281,7 +294,8 @@ export const TemplatePreview = ({
       case 'modern': return 'shadow';
       case 'floating-particles': return 'gradient';
       case 'wave-background': return 'default';
-      case 'gradient-flow': return 'minimal';
+      case 'gradient-flow': return 'rounded';
+      case 'gradient-blue-flow': return 'rounded';
       default: return 'default';
     }
   };
@@ -300,6 +314,7 @@ export const TemplatePreview = ({
       case 'floating-particles': return 'raleway';
       case 'wave-background': return 'poppins';
       case 'gradient-flow': return 'montserrat';
+      case 'gradient-blue-flow': return 'poppins';
       default: return 'default';
     }
   };

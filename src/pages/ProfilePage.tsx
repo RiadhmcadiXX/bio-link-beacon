@@ -8,6 +8,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { WaveAnimation } from "@/components/animations/WaveAnimation";
 import { ParticlesAnimation } from "@/components/animations/ParticlesAnimation";
 import { LightBlueToBlue_template } from "@/components/animations/LightBlueToBlue_template";
+import { GradientFlowAnimation } from "@/components/animations/GradientFlowAnimation";
+import { renderAnimationBackground } from "@/utils/templateAnimations";
 
 interface Profile {
   id: string;
@@ -144,62 +146,75 @@ const ProfilePage = () => {
   // Template styles
   const getTemplateStyles = () => {
     const template = profile.template || 'default';
-    const theme = profile.theme || 'purple'; // Provide a default if null
+    const theme = profile.theme || 'purple';
 
-    // Base theme color based on user preference
-    let themeColor;
-    switch (theme) {
-      case 'blue': themeColor = 'blue'; break;
-      case 'pink': themeColor = 'pink'; break;
-      case 'orange': themeColor = 'orange'; break;
-      default: themeColor = 'purple'; break;
-    }
+    // Map theme to color
+    const themeMap: Record<string, string> = {
+      blue: 'blue',
+      pink: 'pink',
+      orange: 'orange',
+      purple: 'purple',
+    };
+    const themeColor = themeMap[theme] || 'purple';
 
-    // Template-specific styles
+    // Common base styles
+    const commonStyles = {
+      container: 'max-w-md mx-auto px-4 py-8',
+      avatar: 'h-20 w-20',
+      header: 'text-center mb-6',
+      title: 'text-xl font-bold',
+      bio: 'text-gray-600 text-sm',
+      links: 'space-y-3',
+      themeColor,
+      buttonStyle: profile.button_style || 'default',
+      fontFamily: profile.font_family || 'default',
+    };
+
+    // Template-specific overrides
     switch (template) {
       case 'minimal':
         return {
+          ...commonStyles,
           background: 'bg-white',
-          container: 'max-w-md mx-auto px-4 py-8',
           avatar: 'h-16 w-16',
-          header: 'text-center mb-6',
           title: 'text-xl font-semibold',
           bio: 'text-sm text-gray-500',
           links: 'space-y-2',
-          themeColor,
           buttonStyle: profile.button_style || 'minimal',
-          fontFamily: profile.font_family || 'default'
         };
+
       case 'elegant-dark':
         return {
+          ...commonStyles,
           background: 'bg-gray-900',
           container: 'max-w-md mx-auto px-6 py-10',
           avatar: 'h-20 w-20 ring-2 ring-gray-800',
           header: 'text-center mb-8 text-white',
           title: 'text-2xl font-bold',
           bio: 'text-sm text-gray-400',
-          links: 'space-y-3',
           themeColor: 'blue',
           buttonStyle: profile.button_style || 'outline',
-          fontFamily: profile.font_family || 'serif'
+          fontFamily: profile.font_family || 'serif',
         };
+
       case 'gradient':
         return {
+          ...commonStyles,
           background: 'bg-gradient-to-br from-purple-500 to-pink-500',
           container: 'max-w-md mx-auto px-5 py-8',
           avatar: 'h-24 w-24 ring-4 ring-white/20',
           header: 'text-center mb-6 text-white',
           title: 'text-2xl font-bold',
           bio: 'text-sm text-white/80',
-          links: 'space-y-3',
           themeColor: 'pink',
           buttonStyle: profile.button_style || 'gradient',
-          fontFamily: profile.font_family || 'display'
+          fontFamily: profile.font_family || 'display',
         };
+
       case 'bubbles':
         return {
+          ...commonStyles,
           background: 'bg-blue-50',
-          container: 'max-w-md mx-auto px-4 py-8',
           avatar: 'h-20 w-20 border-4 border-blue-200',
           header: 'text-center mb-8',
           title: 'text-2xl font-bold text-blue-800',
@@ -207,53 +222,69 @@ const ProfilePage = () => {
           links: 'space-y-4',
           themeColor: 'blue',
           buttonStyle: profile.button_style || 'rounded',
-          fontFamily: profile.font_family || 'handwritten'
+          fontFamily: profile.font_family || 'handwritten',
         };
+
       case 'modern':
         return {
+          ...commonStyles,
           background: 'bg-gray-100',
           container: 'max-w-md mx-auto px-4 py-10',
-          avatar: 'h-24 w-24',
           header: 'text-left mb-8 flex items-center gap-4',
           title: 'text-xl font-bold',
           bio: 'text-sm text-gray-600 mt-1',
-          links: 'space-y-3',
           themeColor: 'orange',
           buttonStyle: profile.button_style || 'shadow',
-          fontFamily: profile.font_family || 'mono'
+          fontFamily: profile.font_family || 'mono',
         };
+      case 'gradient-flow':
+        return {
+          ...commonStyles,
+          background: 'bg-[#4b0082]', // or use a gradient bg you prefer
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          themeColor: 'purple',
+          buttonStyle: profile.button_style || 'minimal',
+          fontFamily: profile.font_family || 'lobster',
+        };
+
+      case 'blue-flow':
+        return {
+          ...commonStyles,
+          background: 'bg-[#1E3A8A]', // you can change this to match your actual style
+          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
+          avatar: 'h-20 w-20 ring-2 ring-white/30',
+          header: 'text-center mb-6 text-white',
+          title: 'text-2xl font-bold',
+          bio: 'text-sm text-white/80',
+          themeColor: 'blue',
+          buttonStyle: profile.button_style || 'modern',
+          fontFamily: profile.font_family || 'lobster',
+        };
+
       case 'custom':
         return {
+          ...commonStyles,
           background: `bg-gradient-to-br ${theme === 'purple' ? 'from-purple-100 to-purple-200' :
-            theme === 'blue' ? 'from-blue-100 to-blue-200' :
-              theme === 'pink' ? 'from-pink-100 to-pink-200' :
-                'from-orange-100 to-orange-200'
+              theme === 'blue' ? 'from-blue-100 to-blue-200' :
+                theme === 'pink' ? 'from-pink-100 to-pink-200' :
+                  'from-orange-100 to-orange-200'
             }`,
-          container: 'max-w-md mx-auto px-4 py-8',
-          avatar: 'h-20 w-20',
-          header: 'text-center mb-6',
-          title: 'text-xl font-bold',
-          bio: 'text-gray-600 text-sm',
-          links: 'space-y-3',
-          themeColor,
-          buttonStyle: profile.button_style || 'default',
-          fontFamily: profile.font_family || 'default'
         };
-      default: // default template
+
+      default:
         return {
-          background: profile.theme ? `bg-gradient-to-br from-${theme}-50 to-${theme}-100` : 'bg-gradient-to-br from-purple-50 to-purple-100',
-          container: 'max-w-md mx-auto px-4 py-8',
-          avatar: 'h-20 w-20',
-          header: 'text-center mb-6',
-          title: 'text-xl font-bold',
-          bio: 'text-gray-600 text-sm',
-          links: 'space-y-3',
-          themeColor,
-          buttonStyle: profile.button_style || 'default',
-          fontFamily: profile.font_family || 'default'
+          ...commonStyles,
+          background: profile.theme
+            ? `bg-gradient-to-br from-${theme}-50 to-${theme}-100`
+            : 'bg-gradient-to-br from-purple-50 to-purple-100',
         };
     }
   };
+
 
   const templateStyles = getTemplateStyles();
 
@@ -302,7 +333,7 @@ const ProfilePage = () => {
   // Get animation type based on template or custom settings
   const getAnimationType = (): string | null => {
     const template = profile.template || 'default';
-    
+
     if (template === 'custom') {
       return profile.animation_type || null;
     }
@@ -318,16 +349,16 @@ const ProfilePage = () => {
   // Render the appropriate animation component
   const renderAnimation = () => {
     if (!hasAnimation()) return null;
-    
+
     const animationType = getAnimationType();
-    
+
     switch (animationType) {
       case 'waves':
         return <WaveAnimation />;
       case 'particles':
         return <ParticlesAnimation />;
       case 'gradientFlow':
-        return <LightBlueToBlue_template fromColor="#00B4DB" toColor="#0083B0" speed={0.3} />
+        return <GradientFlowAnimation fromColor="#00B4DB" toColor="#0083B0" speed={0.3} />
 
       default:
         return null;
@@ -353,13 +384,13 @@ const ProfilePage = () => {
   console.log('Profile template:', profile.template, 'Animation type:', getAnimationType(), 'Has animation:', hasAnimation());
 
   return (
-    <div 
+    <div
       className={`min-h-screen ${templateStyles.background} py-12 px-4`}
       style={getCustomBackgroundStyle()}
     >
-      {/* Animation background based on template */}
-      {renderAnimation()}
-      
+      {/* ✅ Replaced previous renderAnimation with the unified function */}
+      {renderAnimationBackground(profile.template || 'default', profile)}
+
       <div className={`${templateStyles.container} relative z-10`}>
         {/* Profile Header */}
         {templateStyles.header.includes('flex') ? (

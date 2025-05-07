@@ -8,8 +8,8 @@ interface GradientFlowProps {
 }
 
 export const GradientFlowAnimation = ({
-  fromColor = "#6a11cb",
-  toColor = "#2575fc",
+  fromColor = "#00F260",
+  toColor = "#0575E6",
   speed = 0.5,
 }: GradientFlowProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
