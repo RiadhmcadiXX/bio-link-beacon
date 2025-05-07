@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,10 @@ interface Profile {
   font_family: string | null;
   animation_type?: string | null;
   sections_layout?: Record<string, string> | null;
+  // Add the missing properties
+  gradientFrom?: string | null;
+  gradientTo?: string | null;
+  customColor?: string | null;
 }
 
 interface Link {
