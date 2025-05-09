@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
+  loginWithGoogle: async () => {},
   signup: async () => {},
   logout: async () => {},
 });
@@ -148,6 +150,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message || "Google sign-in failed");
+        throw error;
+      }
+      
+      // No need for toast.success here as we're being redirected
+      // The redirect will happen automatically via Supabase OAuth
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      toast.error("Failed to sign in with Google");
+    }
+  };
+
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
     try {
@@ -191,6 +215,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginWithGoogle,
         signup,
         logout,
       }}
