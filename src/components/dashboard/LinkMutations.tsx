@@ -23,6 +23,11 @@ export const useLinkMutations = (userId: string | undefined) => {
     mutationFn: async (link: Partial<Link>) => {
       if (!userId) throw new Error("Not authenticated");
 
+      // Special case for embed links - ensure linkType is set
+      if (link.isEmbed) {
+        link.linkType = 'embed';
+      }
+
       if (link.id) {
         // Update existing link
         const { error } = await supabase

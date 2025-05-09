@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -48,6 +47,8 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
     isEmbed: false // new field to identify embed links
   });
 
+  const [activeTab, setActiveTab] = useState("general");
+
   useEffect(() => {
     if (link) {
       setFormData({
@@ -61,6 +62,12 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
         embedType: link.embedType || "direct",
         isEmbed: link.isEmbed || false
       });
+      
+      // Set the active tab based on the link type
+      if (link.linkType === "social") setActiveTab("social");
+      else if (link.linkType === "product") setActiveTab("product");
+      else if (link.linkType === "embed" || link.isEmbed) setActiveTab("embed");
+      else setActiveTab("general");
     }
   }, [link]);
 
@@ -74,13 +81,14 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
   };
 
   const handleLinkTypeChange = (value: string) => {
+    setActiveTab(value);
     setFormData({ ...formData, linkType: value });
     
     // Set default icon based on link type
     if (value === "social") {
-      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "twitter" : prev.icon }));
+      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "twitter" : prev.icon, isEmbed: false }));
     } else if (value === "product") {
-      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "shopping-cart" : prev.icon }));
+      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "shopping-cart" : prev.icon, isEmbed: false }));
     } else if (value === "embed") {
       setFormData(prev => ({ ...prev, 
         icon: "video", 
@@ -97,7 +105,15 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Make sure to set isEmbed correctly for embed type links
+    let submissionData = { ...formData };
+    if (activeTab === "embed") {
+      submissionData.isEmbed = true;
+      submissionData.linkType = "embed";
+    }
+    
+    onSave(submissionData);
   };
 
   // Make sure URL has protocol
@@ -177,7 +193,7 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
           
           <div className="py-4">
             <Tabs 
-              value={formData.linkType} 
+              value={activeTab} 
               onValueChange={handleLinkTypeChange}
               className="w-full"
             >
@@ -354,7 +370,7 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                 formData.url = validateUrl(formData.url);
               }}
               className="bg-brand-purple hover:bg-brand-purple/90"
-              disabled={formData.linkType === "embed" && !isYouTubeUrl(formData.url)}
+              disabled={activeTab === "embed" && !isYouTubeUrl(formData.url)}
             >
               Save Link
             </Button>
