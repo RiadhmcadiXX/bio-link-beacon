@@ -93,6 +93,12 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
+				letter: {
+					'25%, 100%': { color: '#a855f7' }, // purple
+					'25%': { color: '#ec4899' },     // pink
+					'250%': { color: '#22d3ee' },     // cyan
+					// '75%': { color: '#facc15' },     // yellow
+				},
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -117,7 +123,8 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse-slow': 'pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				letter: 'letter 5s infinite ease-in-out',
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

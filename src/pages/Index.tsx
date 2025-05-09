@@ -17,9 +17,11 @@ const Index = () => {
   }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
-  
+
   console.log("Index page rendering with auth state:", { isAuthenticated, isLoading });
-  
+
+  const phrase = "One Link for All Your Content";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header/Navigation */}
@@ -56,7 +58,7 @@ const Index = () => {
               </Button>
             </div>
           )}
-          
+
           {/* Mobile Navigation */}
           <MobileNav />
         </div>
@@ -65,16 +67,26 @@ const Index = () => {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col lg:flex-row items-center justify-between">
         <div className="lg:w-1/2 space-y-6 mb-10 lg:mb-0">
-          <h2 className="text-4xl sm:text-5xl font-bold leading-tight">
-            One Link for All Your <span className="bg-clip-text text-transparent bg-hero-pattern">Content</span>
+          <h2 className="text-4xl sm:text-5xl font-bold leading-tight flex flex-wrap">
+            {phrase.split("").map((char, i) => (
+              <span
+                key={i}
+                className="inline-block animate-letter"
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
           </h2>
+
+
           <p className="text-lg text-gray-600 max-w-lg">
             Connect your audience to everything you share. Create a customizable page for all your links, and manage them in one place.
           </p>
           <div className="pt-4">
-            <Button 
-              onClick={() => navigate(isAuthenticated ? "/dashboard" : "/signup")} 
-              size="lg" 
+            <Button
+              onClick={() => navigate(isAuthenticated ? "/dashboard" : "/signup")}
+              size="lg"
               className="bg-brand-purple hover:bg-brand-purple/90 text-white"
             >
               {isAuthenticated ? "Go to Dashboard" : "Get Started for Free"}
@@ -110,16 +122,16 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Everything you need for your link hub</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard 
-              title="Customizable Profile" 
+            <FeatureCard
+              title="Customizable Profile"
               description="Personalize your profile with custom themes, colors, and images to match your brand."
             />
-            <FeatureCard 
-              title="Link Management" 
+            <FeatureCard
+              title="Link Management"
               description="Add, edit, and organize your links easily through our intuitive dashboard."
             />
-            <FeatureCard 
-              title="Analytics" 
+            <FeatureCard
+              title="Analytics"
               description="Track views and clicks on your links to understand what content resonates."
             />
           </div>
