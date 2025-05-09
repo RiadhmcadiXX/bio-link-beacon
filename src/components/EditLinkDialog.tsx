@@ -24,7 +24,8 @@ import {
   Mail,
   Phone,
   ShoppingCart,
-  Package
+  Package,
+  Video
 } from "lucide-react";
 
 interface EditLinkDialogProps {
@@ -42,7 +43,9 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
     icon: "link",
     linkType: "general",
     clicks: 0,
-    position: 0
+    position: 0,
+    embedType: "direct", // new field: 'direct' or 'collapsible'
+    isEmbed: false // new field to identify embed links
   });
 
   useEffect(() => {
@@ -54,7 +57,9 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
         icon: link.icon || "link",
         linkType: link.linkType || "general",
         clicks: link.clicks || 0,
-        position: link.position || 0
+        position: link.position || 0,
+        embedType: link.embedType || "direct",
+        isEmbed: link.isEmbed || false
       });
     }
   }, [link]);
@@ -76,7 +81,18 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
       setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "twitter" : prev.icon }));
     } else if (value === "product") {
       setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "shopping-cart" : prev.icon }));
+    } else if (value === "embed") {
+      setFormData(prev => ({ ...prev, 
+        icon: "video", 
+        isEmbed: true 
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, isEmbed: false }));
     }
+  };
+
+  const handleEmbedTypeChange = (value: string) => {
+    setFormData({ ...formData, embedType: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,6 +107,19 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
       return `https://${url}`;
     }
     return url;
+  };
+
+  // Extract YouTube video ID from URL
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Validate if URL is a valid YouTube URL
+  const isYouTubeUrl = (url: string) => {
+    const videoId = getYouTubeVideoId(url);
+    return !!videoId;
   };
 
   // Get social platforms icon options based on link type
@@ -119,6 +148,11 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
       { value: "phone", label: "Phone", icon: <Phone className="h-4 w-4 mr-2" /> }
     ];
 
+    const embedIcons = [
+      { value: "video", label: "Video", icon: <Video className="h-4 w-4 mr-2" /> },
+      { value: "youtube", label: "YouTube", icon: <Youtube className="h-4 w-4 mr-2" /> }
+    ];
+
     switch (formData.linkType) {
       case "social":
         return [...commonIcons, ...socialIcons];
@@ -126,6 +160,8 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
         return [...commonIcons, ...productIcons];
       case "contact":
         return [...commonIcons, ...contactIcons];
+      case "embed":
+        return embedIcons;
       default:
         return [...commonIcons, ...socialIcons, ...productIcons, ...contactIcons];
     }
@@ -145,10 +181,11 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
               onValueChange={handleLinkTypeChange}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-3 mb-4">
+              <TabsList className="grid grid-cols-4 mb-4">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="social">Social</TabsTrigger>
                 <TabsTrigger value="product">Product</TabsTrigger>
+                <TabsTrigger value="embed">Embed</TabsTrigger>
               </TabsList>
 
               <TabsContent value="general" className="mt-0 space-y-4">
@@ -225,6 +262,59 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                   />
                 </div>
               </TabsContent>
+
+              <TabsContent value="embed" className="mt-0 space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Video Title</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="My YouTube Video"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="url">YouTube URL</Label>
+                  <Input
+                    id="url"
+                    name="url"
+                    value={formData.url}
+                    onChange={handleChange}
+                    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    required
+                  />
+                  {formData.url && !isYouTubeUrl(formData.url) && (
+                    <p className="text-sm text-red-500">
+                      Please enter a valid YouTube URL
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="embedType">Display Style</Label>
+                  <Select
+                    value={formData.embedType}
+                    onValueChange={handleEmbedTypeChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select display style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="direct">
+                        <div className="flex items-center">
+                          <span>Show Directly</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="collapsible">
+                        <div className="flex items-center">
+                          <span>Show in Collapsible</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
             </Tabs>
 
             <div className="grid gap-2 mt-4">
@@ -264,6 +354,7 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                 formData.url = validateUrl(formData.url);
               }}
               className="bg-brand-purple hover:bg-brand-purple/90"
+              disabled={formData.linkType === "embed" && !isYouTubeUrl(formData.url)}
             >
               Save Link
             </Button>

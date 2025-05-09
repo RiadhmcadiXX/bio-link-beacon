@@ -1,5 +1,6 @@
 
 import React from "react";
+import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
   ExternalLink, 
   Link2, 
@@ -13,7 +14,8 @@ import {
   Mail,
   Phone,
   ShoppingCart,
-  Package
+  Package,
+  Video
 } from "lucide-react";
 
 interface ProfileLinkProps {
@@ -28,6 +30,8 @@ interface ProfileLinkProps {
     description?: string;
     imageUrl?: string;
     price?: string;
+    isEmbed?: boolean;
+    embedType?: string;
   };
   themeColor: string;
   onClick: () => void;
@@ -79,6 +83,8 @@ export const ProfileLink = ({
         return <ShoppingCart className="h-5 w-5" />;
       case 'package':
         return <Package className="h-5 w-5" />;
+      case 'video':
+        return <Video className="h-5 w-5" />;
       default:
         return <Link2 className="h-5 w-5" />;
     }
@@ -112,6 +118,8 @@ export const ProfileLink = ({
       return 'border-l-4 border-blue-400';
     } else if (link.linkType === 'product') {
       return 'border-l-4 border-green-400';
+    } else if (link.linkType === 'embed') {
+      return 'border-l-4 border-purple-400';
     }
     return '';
   };
@@ -227,6 +235,20 @@ export const ProfileLink = ({
     }
     return {};
   };
+
+  // If this is an embed link, render the embedded content
+  if (link.isEmbed) {
+    return (
+      <div className="mb-4 w-full" onClick={onClick}>
+        <EmbedVideo 
+          url={link.url}
+          title={link.title}
+          isCollapsible={link.embedType === 'collapsible'}
+          themeColor={themeColor}
+        />
+      </div>
+    );
+  }
 
   // Render social icon for horizontal icons list
   if (link.linkType === 'social' && layout === 'icons') {

@@ -15,6 +15,7 @@ import {
   Phone,
   ShoppingCart,
   Package,
+  Video,
   Pencil, 
   Trash2,
   GripVertical
@@ -28,6 +29,8 @@ interface LinkItemProps {
     icon: string;
     linkType?: string;
     clicks: number;
+    isEmbed?: boolean;
+    embedType?: string;
   };
   onEdit: () => void;
   onDelete: () => void;
@@ -67,6 +70,8 @@ export const LinkItem = ({
         return <ShoppingCart className="h-4 w-4" />;
       case 'package':
         return <Package className="h-4 w-4" />;
+      case 'video':
+        return <Video className="h-4 w-4" />;
       default:
         return <Link2 className="h-4 w-4" />;
     }
@@ -79,9 +84,18 @@ export const LinkItem = ({
         return 'bg-blue-50';
       case 'product':
         return 'bg-green-50';
+      case 'embed':
+        return 'bg-purple-50';
       default:
         return 'bg-gray-100';
     }
+  };
+
+  // Extract YouTube video ID for display
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
   return (
@@ -107,6 +121,11 @@ export const LinkItem = ({
             >
               {link.url}
             </a>
+            {link.isEmbed && (
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded mt-1 inline-block">
+                {link.embedType === "collapsible" ? "Collapsible Embed" : "Video Embed"}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center">
