@@ -20,6 +20,8 @@ import { CustomTemplateTab } from "@/components/templates/CustomTemplateTab";
 import { Link, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { templatesLibrary } from "@/constants/templates";
+import { UpgradeBanner } from '@/components/UpgradeBanner';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Link {
   id: string;
@@ -43,8 +45,6 @@ interface Template {
   animationType?: string;
 }
 
-
-
 interface Profile {
   id: string;
   username: string;
@@ -63,6 +63,7 @@ interface Profile {
 
 const Dashboard = () => {
   const { user } = useAuthContext();
+  const { role } = useUserRole();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<Link | null>(null);
   const queryClient = useQueryClient();
@@ -459,7 +460,14 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        
+        {/* Show upgrade banner for free users */}
+        {role === 'free' && (
+          <UpgradeBanner feature="embed_links" />
+        )}
+        
         <Tabs defaultValue="links" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-between items-center mb-6">
             <TabsList className="grid grid-cols-5 w-full md:w-auto">

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 interface ExtendedUser extends User {
   username?: string;
+  planType?: 'free' | 'pro' | 'business';
 }
 
 interface AuthContextType {
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             try {
               const { data: profile } = await supabase
                 .from("profiles")
-                .select("username")
+                .select("username, plan_type")
                 .eq("id", newSession.user.id)
                 .maybeSingle();
 
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser({
                   ...newSession.user,
                   username: profile?.username ?? undefined,
+                  planType: profile?.plan_type ?? 'free',
                 });
               }
             } catch (err) {
@@ -101,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             const { data: profile } = await supabase
               .from("profiles")
-              .select("username")
+              .select("username, plan_type")
               .eq("id", currentSession.user.id)
               .maybeSingle();
 
@@ -109,6 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setUser({
                 ...currentSession.user,
                 username: profile?.username ?? undefined,
+                planType: profile?.plan_type ?? 'free',
               });
             }
           } catch (err) {
