@@ -2,17 +2,16 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
-type UserRole = 'free' | 'pro' | 'business';
+import { PlanType } from '@/types/plan';
 
 export function useUserRole(): { 
-  role: UserRole | null, 
+  role: PlanType | null, 
   isLoading: boolean,
   isUpgradable: boolean,
   canAccessFeature: (feature: string) => boolean 
 } {
   const { user } = useAuthContext();
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [role, setRole] = useState<PlanType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -35,7 +34,7 @@ export function useUserRole(): {
           
         // Fall back to profile data if no subscription
         if (subscriptionData?.plan_type) {
-          setRole(subscriptionData.plan_type as UserRole);
+          setRole(subscriptionData.plan_type as PlanType);
         } else {
           const { data: profileData } = await supabase
             .from('profiles')
@@ -43,7 +42,7 @@ export function useUserRole(): {
             .eq('id', user.id)
             .single();
             
-          setRole(profileData?.plan_type as UserRole || 'free');
+          setRole(profileData?.plan_type as PlanType || 'free');
         }
       } catch (error) {
         console.error("Error fetching user role:", error);

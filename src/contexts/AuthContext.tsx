@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { PlanType } from "@/types/plan";
 
 interface ExtendedUser extends User {
   username?: string;
-  planType?: 'free' | 'pro' | 'business';
+  planType?: PlanType;
 }
 
 interface AuthContextType {
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser({
                   ...newSession.user,
                   username: profile?.username ?? undefined,
-                  planType: profile?.plan_type ?? 'free',
+                  planType: (profile?.plan_type as PlanType) ?? 'free',
                 });
               }
             } catch (err) {
@@ -111,7 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setUser({
                 ...currentSession.user,
                 username: profile?.username ?? undefined,
-                planType: profile?.plan_type ?? 'free',
+                planType: (profile?.plan_type as PlanType) ?? 'free',
               });
             }
           } catch (err) {

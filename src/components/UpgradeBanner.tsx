@@ -3,10 +3,11 @@ import React from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Star } from 'lucide-react';
+import { PlanType } from '@/types/plan';
 
 interface UpgradeBannerProps {
   feature?: string;
-  showWhenRole?: 'free' | 'pro' | null;
+  showWhenRole?: PlanType | null;
 }
 
 export const UpgradeBanner: React.FC<UpgradeBannerProps> = ({ 

@@ -1,8 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-type PlanType = 'free' | 'pro' | 'business';
+import { PlanType } from '@/types/plan';
 
 export async function updateUserPlan(userId: string, newPlan: PlanType): Promise<boolean> {
   try {
