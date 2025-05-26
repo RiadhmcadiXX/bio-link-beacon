@@ -23,7 +23,7 @@ export const useTemplateMutations = (userId: string | undefined) => {
   const queryClient = useQueryClient();
   const { userTemplate } = useUserTemplate(userId);
 
-  // Template update mutation that works with both profiles and user_templates
+  // Template update mutation that properly saves to user_templates
   const updateTemplate = useMutation({
     mutationFn: async ({
       template,
@@ -55,7 +55,7 @@ export const useTemplateMutations = (userId: string | undefined) => {
 
       if (profileError) throw profileError;
 
-      // Update or create user template
+      // Prepare template data for user_templates table
       const templateData = {
         template_name: template,
         button_style: buttonStyle || 'default',
@@ -72,7 +72,14 @@ export const useTemplateMutations = (userId: string | undefined) => {
         animation_type: animationType,
       };
 
-      if (userTemplate) {
+      // Check if user template exists
+      const { data: existingTemplate } = await supabase
+        .from('user_templates')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existingTemplate) {
         // Update existing template
         const { error } = await supabase
           .from('user_templates')
