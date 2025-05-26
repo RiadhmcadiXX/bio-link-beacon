@@ -5,6 +5,7 @@ import { ProfileLink } from "@/components/ProfileLink";
 import { renderAnimationBackground } from "@/utils/templateAnimations";
 import { templatesLibrary } from "@/constants/templates";
 import { useUserTemplate } from "@/hooks/useUserTemplate";
+import { getTemplateStyles, getBackgroundStyle, getTextColor } from "@/utils/templateStyles";
 
 interface LivePreviewProps {
   profile: {
@@ -68,144 +69,8 @@ export const LivePreview = ({
     animationType: userTemplate?.animation_type || templateConfig?.animationType
   };
 
-  // Generate styles based on template
-  const getTemplateStyles = () => {
-    switch (template) {
-      case 'minimal':
-        return {
-          background: 'bg-white',
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12',
-          header: 'text-center mb-4',
-          title: 'text-lg font-semibold',
-          bio: 'text-xs text-gray-500',
-          links: 'space-y-2'
-        };
-      case 'elegant-dark':
-        return {
-          background: 'bg-gray-900',
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12 ring-2 ring-gray-800',
-          header: 'text-center mb-4 text-white',
-          title: 'text-lg font-bold',
-          bio: 'text-xs text-gray-400',
-          links: 'space-y-2'
-        };
-      case 'gradient':
-        return {
-          background: 'bg-gradient-to-br from-purple-500 to-pink-500',
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12 ring-2 ring-white/20',
-          header: 'text-center mb-4 text-white',
-          title: 'text-lg font-bold',
-          bio: 'text-xs text-white/80',
-          links: 'space-y-2'
-        };
-      case 'bubbles':
-        return {
-          background: 'bg-blue-50',
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12 border-2 border-blue-200',
-          header: 'text-center mb-4',
-          title: 'text-lg font-bold text-blue-800',
-          bio: 'text-xs text-blue-600',
-          links: 'space-y-2'
-        };
-      case 'modern':
-        return {
-          background: 'bg-gray-100',
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12',
-          header: 'text-left mb-4 flex items-center gap-2',
-          title: 'text-lg font-bold',
-          bio: 'text-xs text-gray-600',
-          links: 'space-y-2'
-        };
-      case 'custom':
-        // For custom template, use template data
-        if (effectiveTemplate.gradientFrom && effectiveTemplate.gradientTo) {
-          return {
-            background: '', // We'll use inline style for gradient
-            container: 'max-w-full mx-auto px-4 py-6',
-            avatar: 'h-12 w-12',
-            header: 'text-center mb-4',
-            title: 'text-lg font-bold',
-            bio: 'text-xs text-gray-600',
-            links: 'space-y-2'
-          };
-        }
-        
-        return {
-          background: effectiveTemplate.customColor ? '' : `bg-gradient-to-br ${
-            effectiveTemplate.themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
-            effectiveTemplate.themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
-            effectiveTemplate.themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
-            'from-orange-100 to-orange-200'
-          }`,
-          container: 'max-w-full mx-auto px-4 py-6',
-          avatar: 'h-12 w-12',
-          header: 'text-center mb-4',
-          title: 'text-lg font-bold',
-          bio: 'text-xs text-gray-600',
-          links: 'space-y-2'
-        };
-      default: // default and preset templates
-        return {
-          background: '', // Will use template background config
-          container: 'max-w-full mx-auto px-4 py-6 relative z-10',
-          avatar: 'h-12 w-12',
-          header: 'text-center mb-4',
-          title: 'text-lg font-bold',
-          bio: 'text-xs text-gray-600',
-          links: 'space-y-2'
-        };
-    }
-  };
-
-  const styles = getTemplateStyles();
-  
-  // Generate background style based on template configuration
-  const getBackgroundStyle = () => {
-    if (template === 'custom') {
-      if (effectiveTemplate.gradientFrom && effectiveTemplate.gradientTo) {
-        return {
-          background: `linear-gradient(135deg, ${effectiveTemplate.gradientFrom} 0%, ${effectiveTemplate.gradientTo} 100%)`
-        };
-      } else if (effectiveTemplate.customColor) {
-        return {
-          backgroundColor: effectiveTemplate.customColor
-        };
-      }
-      return {};
-    }
-
-    switch (effectiveTemplate.backgroundType) {
-      case 'color':
-        return {
-          backgroundColor: effectiveTemplate.backgroundColor || '#ffffff'
-        };
-      case 'gradient':
-        if (templateConfig?.backgroundConfig?.gradient) {
-          return {
-            background: `linear-gradient(135deg, ${templateConfig.backgroundConfig.gradient.from} 0%, ${templateConfig.backgroundConfig.gradient.to} 100%)`
-          };
-        }
-        return {};
-      case 'image':
-        return {
-          backgroundImage: `linear-gradient(${effectiveTemplate.backgroundOverlay || 'rgba(0,0,0,0.3)'}, ${effectiveTemplate.backgroundOverlay || 'rgba(0,0,0,0.3)'}), url(${effectiveTemplate.backgroundImageUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        };
-      case 'animated':
-        return {
-          backgroundColor: templateConfig?.backgroundConfig?.baseColor || '#000000'
-        };
-      default:
-        return {};
-    }
-  };
+  // Get unified template styles
+  const styles = getTemplateStyles(template, effectiveTemplate);
   
   // Add some sample links if none are provided
   const sampleLinks = links && links.length > 0 ? links : [
@@ -242,23 +107,13 @@ export const LivePreview = ({
   // Determine the effective theme color
   const effectiveThemeColor = effectiveTemplate.customColor || effectiveTemplate.themeColor;
 
-  // Determine text color based on background
-  const getTextColor = () => {
-    if (template === 'elegant-dark' || effectiveTemplate.backgroundType === 'image') {
-      return 'text-white';
-    }
-    if (template === 'gradient' || (effectiveTemplate.backgroundType === 'animated')) {
-      return 'text-white';
-    }
-    return '';
-  };
-
-  const textColorClass = getTextColor();
+  // Get text color based on template
+  const textColorClass = getTextColor(template, effectiveTemplate);
 
   return (
     <div 
       className={`rounded-md overflow-hidden h-full relative ${styles.background}`}
-      style={getBackgroundStyle()}
+      style={getBackgroundStyle(template, effectiveTemplate)}
     >
       {/* Render animated background if needed */}
       {effectiveTemplate.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: effectiveTemplate.animationType })}

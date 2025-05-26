@@ -5,11 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { WaveAnimation } from "@/components/animations/WaveAnimation";
-import { ParticlesAnimation } from "@/components/animations/ParticlesAnimation";
-import { LightBlueToBlue_template } from "@/components/animations/LightBlueToBlue_template";
-import { GradientFlowAnimation } from "@/components/animations/GradientFlowAnimation";
 import { renderAnimationBackground } from "@/utils/templateAnimations";
+import { getTemplateStyles, getBackgroundStyle, getTextColor } from "@/utils/templateStyles";
+import { useUserTemplate } from "@/hooks/useUserTemplate";
 
 interface Profile {
   id: string;
@@ -24,7 +22,6 @@ interface Profile {
   font_family: string | null;
   animation_type?: string | null;
   sections_layout?: Record<string, string> | null;
-  // Add the missing properties
   gradientFrom?: string | null;
   gradientTo?: string | null;
   customColor?: string | null;
@@ -65,6 +62,9 @@ const ProfilePage = () => {
     },
   });
 
+  // Get user template data
+  const { userTemplate } = useUserTemplate(profile?.id);
+
   // Fetch links data
   const {
     data: links,
@@ -90,7 +90,6 @@ const ProfilePage = () => {
   // Update link clicks
   const updateLinkClicks = useMutation({
     mutationFn: async (linkId: string) => {
-      // Directly fetch and update the clicks count
       const { data: linkData, error: fetchError } = await supabase
         .from('links')
         .select('clicks')
@@ -143,150 +142,27 @@ const ProfilePage = () => {
     );
   }
 
-  // Template styles
-  const getTemplateStyles = () => {
-    const template = profile.template || 'default';
-    const theme = profile.theme || 'purple';
-
-    // Map theme to color
-    const themeMap: Record<string, string> = {
-      blue: 'blue',
-      pink: 'pink',
-      orange: 'orange',
-      purple: 'purple',
-    };
-    const themeColor = themeMap[theme] || 'purple';
-
-    // Common base styles
-    const commonStyles = {
-      container: 'max-w-md mx-auto px-4 py-8',
-      avatar: 'h-20 w-20',
-      header: 'text-center mb-6',
-      title: 'text-xl font-bold',
-      bio: 'text-gray-600 text-sm',
-      links: 'space-y-3',
-      themeColor,
-      buttonStyle: profile.button_style || 'default',
-      fontFamily: profile.font_family || 'default',
-    };
-
-    // Template-specific overrides
-    switch (template) {
-      case 'minimal':
-        return {
-          ...commonStyles,
-          background: 'bg-white',
-          avatar: 'h-16 w-16',
-          title: 'text-xl font-semibold',
-          bio: 'text-sm text-gray-500',
-          links: 'space-y-2',
-          buttonStyle: profile.button_style || 'minimal',
-        };
-
-      case 'elegant-dark':
-        return {
-          ...commonStyles,
-          background: 'bg-gray-900',
-          container: 'max-w-md mx-auto px-6 py-10',
-          avatar: 'h-20 w-20 ring-2 ring-gray-800',
-          header: 'text-center mb-8 text-white',
-          title: 'text-2xl font-bold',
-          bio: 'text-sm text-gray-400',
-          themeColor: 'blue',
-          buttonStyle: profile.button_style || 'outline',
-          fontFamily: profile.font_family || 'serif',
-        };
-
-      case 'gradient':
-        return {
-          ...commonStyles,
-          background: 'bg-gradient-to-br from-purple-500 to-pink-500',
-          container: 'max-w-md mx-auto px-5 py-8',
-          avatar: 'h-24 w-24 ring-4 ring-white/20',
-          header: 'text-center mb-6 text-white',
-          title: 'text-2xl font-bold',
-          bio: 'text-sm text-white/80',
-          themeColor: 'pink',
-          buttonStyle: profile.button_style || 'gradient',
-          fontFamily: profile.font_family || 'display',
-        };
-
-      case 'bubbles':
-        return {
-          ...commonStyles,
-          background: 'bg-blue-50',
-          avatar: 'h-20 w-20 border-4 border-blue-200',
-          header: 'text-center mb-8',
-          title: 'text-2xl font-bold text-blue-800',
-          bio: 'text-sm text-blue-600',
-          links: 'space-y-4',
-          themeColor: 'blue',
-          buttonStyle: profile.button_style || 'rounded',
-          fontFamily: profile.font_family || 'handwritten',
-        };
-
-      case 'modern':
-        return {
-          ...commonStyles,
-          background: 'bg-gray-100',
-          container: 'max-w-md mx-auto px-4 py-10',
-          header: 'text-left mb-8 flex items-center gap-4',
-          title: 'text-xl font-bold',
-          bio: 'text-sm text-gray-600 mt-1',
-          themeColor: 'orange',
-          buttonStyle: profile.button_style || 'shadow',
-          fontFamily: profile.font_family || 'mono',
-        };
-      case 'gradient-flow':
-        return {
-          ...commonStyles,
-          background: 'bg-[#4b0082]', // or use a gradient bg you prefer
-          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
-          avatar: 'h-20 w-20 ring-2 ring-white/30',
-          header: 'text-center mb-6 text-white',
-          title: 'text-2xl font-bold',
-          bio: 'text-sm text-white/80',
-          themeColor: 'purple',
-          buttonStyle: profile.button_style || 'minimal',
-          fontFamily: profile.font_family || 'lobster',
-        };
-
-      case 'blue-flow':
-        return {
-          ...commonStyles,
-          background: 'bg-[#1E3A8A]', // you can change this to match your actual style
-          container: 'max-w-md mx-auto px-5 py-8 relative z-10',
-          avatar: 'h-20 w-20 ring-2 ring-white/30',
-          header: 'text-center mb-6 text-white',
-          title: 'text-2xl font-bold',
-          bio: 'text-sm text-white/80',
-          themeColor: 'blue',
-          buttonStyle: profile.button_style || 'modern',
-          fontFamily: profile.font_family || 'lobster',
-        };
-
-      case 'custom':
-        return {
-          ...commonStyles,
-          background: `bg-gradient-to-br ${theme === 'purple' ? 'from-purple-100 to-purple-200' :
-              theme === 'blue' ? 'from-blue-100 to-blue-200' :
-                theme === 'pink' ? 'from-pink-100 to-pink-200' :
-                  'from-orange-100 to-orange-200'
-            }`,
-        };
-
-      default:
-        return {
-          ...commonStyles,
-          background: profile.theme
-            ? `bg-gradient-to-br from-${theme}-50 to-${theme}-100`
-            : 'bg-gradient-to-br from-purple-50 to-purple-100',
-        };
-    }
+  // Create template configuration from user template or profile data
+  const templateConfig = {
+    name: userTemplate?.template_name || profile.template || 'default',
+    buttonStyle: userTemplate?.button_style || profile.button_style || 'default',
+    fontFamily: userTemplate?.font_family || profile.font_family || 'default',
+    themeColor: userTemplate?.theme_color || profile.theme || 'purple',
+    customColor: userTemplate?.custom_color || profile.customColor,
+    gradientFrom: userTemplate?.gradient_from || profile.gradientFrom,
+    gradientTo: userTemplate?.gradient_to || profile.gradientTo,
+    backgroundType: userTemplate?.background_type || 'color',
+    backgroundColor: userTemplate?.background_color,
+    backgroundImageUrl: userTemplate?.background_image_url,
+    backgroundOverlay: userTemplate?.background_overlay,
+    hasAnimation: userTemplate?.has_animation || false,
+    animationType: userTemplate?.animation_type || profile.animation_type
   };
 
+  const template = templateConfig.name;
 
-  const templateStyles = getTemplateStyles();
+  // Get unified template styles
+  const templateStyles = getTemplateStyles(template, templateConfig);
 
   // Group links by section
   const groupLinksBySection = () => {
@@ -319,79 +195,44 @@ const ProfilePage = () => {
     return sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
   };
 
-  // Determine if the current template has animations
-  const hasAnimation = (): boolean => {
-    const template = profile.template || 'default';
-    return (
-      template === 'floating-particles' ||
-      template === 'wave-background' ||
-      template === 'gradient-flow' ||
-      (template === 'custom' && !!profile.animation_type)
-    );
+  // Font class mapping
+  const fontClassMap: Record<string, string> = {
+    inter: "font-inter",
+    roboto: "font-roboto",
+    poppins: "font-poppins",
+    montserrat: "font-montserrat",
+    raleway: "font-raleway",
+    playfair: "font-playfair",
+    lobster: "font-lobster",
+    pacifico: "font-pacifico",
+    oswald: "font-oswald",
+    lato: "font-lato",
+    merriweather: "font-merriweather",
+    dancing: "font-dancing",
+    quicksand: "font-quicksand",
+    comfortaa: "font-comfortaa",
+    nunito: "font-nunito",
+    serif: "font-serif",
+    mono: "font-mono",
+    display: "font-extrabold tracking-wide",
+    handwritten: "italic",
+    default: "font-sans",
   };
+  
+  const fontClass = fontClassMap[templateConfig.fontFamily] || "font-sans";
+  const textColorClass = getTextColor(template, templateConfig);
 
-  // Get animation type based on template or custom settings
-  const getAnimationType = (): string | null => {
-    const template = profile.template || 'default';
-
-    if (template === 'custom') {
-      return profile.animation_type || null;
-    }
-
-    switch (template) {
-      case 'floating-particles': return 'particles';
-      case 'wave-background': return 'waves';
-      case 'gradient-flow': return 'gradientFlow';
-      default: return null;
-    }
-  };
-
-  // Render the appropriate animation component
-  const renderAnimation = () => {
-    if (!hasAnimation()) return null;
-
-    const animationType = getAnimationType();
-
-    switch (animationType) {
-      case 'waves':
-        return <WaveAnimation />;
-      case 'particles':
-        return <ParticlesAnimation />;
-      case 'gradientFlow':
-        return <GradientFlowAnimation fromColor="#00B4DB" toColor="#0083B0" speed={0.3} />
-
-      default:
-        return null;
-    }
-  };
-
-  // Get custom background style if needed
-  const getCustomBackgroundStyle = () => {
-    if (profile.template === 'custom') {
-      if (profile.gradientFrom && profile.gradientTo) {
-        return {
-          background: `linear-gradient(135deg, ${profile.gradientFrom} 0%, ${profile.gradientTo} 100%)`
-        };
-      } else if (profile.customColor) {
-        return {
-          backgroundColor: profile.customColor
-        };
-      }
-    }
-    return {};
-  };
-
-  console.log('Profile template:', profile.template, 'Animation type:', getAnimationType(), 'Has animation:', hasAnimation());
+  console.log('Profile template:', template, 'Animation type:', templateConfig.animationType, 'Has animation:', templateConfig.hasAnimation);
 
   return (
     <div
       className={`min-h-screen ${templateStyles.background} py-12 px-4`}
-      style={getCustomBackgroundStyle()}
+      style={getBackgroundStyle(template, templateConfig)}
     >
-      {/* ✅ Replaced previous renderAnimation with the unified function */}
-      {renderAnimationBackground(profile.template || 'default', profile)}
+      {/* Render animated background if needed */}
+      {templateConfig.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: templateConfig.animationType })}
 
-      <div className={`${templateStyles.container} relative z-10`}>
+      <div className={`${templateStyles.container} ${fontClass} ${textColorClass}`}>
         {/* Profile Header */}
         {templateStyles.header.includes('flex') ? (
           <div className={templateStyles.header}>
@@ -433,7 +274,7 @@ const ProfilePage = () => {
                 key={link.id}
                 link={link}
                 themeColor={templateStyles.themeColor}
-                template={profile.template || 'default'}
+                template={template}
                 buttonStyle={templateStyles.buttonStyle}
                 fontFamily={templateStyles.fontFamily}
                 onClick={() => handleLinkClick(link.id)}
@@ -471,7 +312,7 @@ const ProfilePage = () => {
                       key={link.id}
                       link={link}
                       themeColor={templateStyles.themeColor}
-                      template={profile.template || 'default'}
+                      template={template}
                       buttonStyle={templateStyles.buttonStyle}
                       fontFamily={templateStyles.fontFamily}
                       onClick={() => handleLinkClick(link.id)}
@@ -488,7 +329,7 @@ const ProfilePage = () => {
                       key={link.id}
                       link={link}
                       themeColor={templateStyles.themeColor}
-                      template={profile.template || 'default'}
+                      template={template}
                       buttonStyle={templateStyles.buttonStyle}
                       fontFamily={templateStyles.fontFamily}
                       onClick={() => handleLinkClick(link.id)}
