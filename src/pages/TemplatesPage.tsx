@@ -97,19 +97,29 @@ const TemplatesPage = () => {
     if (selectedTemplate) {
       updateTemplate.mutate({
         template: templateId,
+        theme: selectedTemplate.backgroundConfig?.gradient ? null : 
+               templateId === 'elegant-dark' ? 'blue' :
+               templateId === 'gradient' ? 'pink' :
+               templateId === 'bubbles' ? 'blue' :
+               templateId === 'modern' ? 'orange' :
+               templateId === 'floating-particles' ? 'blue' :
+               templateId === 'wave-background' ? 'blue' :
+               templateId === 'gradient-flow' ? 'purple' :
+               templateId === 'blue-flow' ? 'blue' : 'purple',
         buttonStyle: selectedTemplate.buttonStyle,
         fontFamily: selectedTemplate.fontFamily,
         animationType: selectedTemplate.hasAnimation ? selectedTemplate.animationType : null,
-        backgroundType: selectedTemplate.backgroundType,
+        backgroundType: selectedTemplate.backgroundType || 'color',
         backgroundColor: selectedTemplate.backgroundConfig?.color,
         backgroundImageUrl: selectedTemplate.backgroundConfig?.image,
         backgroundOverlay: selectedTemplate.backgroundConfig?.overlay,
-        // Clear custom settings when applying preset template
-        customColor: null,
         gradientFrom: selectedTemplate.backgroundConfig?.gradient?.from,
-        gradientTo: selectedTemplate.backgroundConfig?.gradient?.to
+        gradientTo: selectedTemplate.backgroundConfig?.gradient?.to,
+        // Clear custom settings when applying preset template
+        customColor: null
       });
     } else {
+      // Fallback for templates not in library
       updateTemplate.mutate({ template: templateId });
     }
     setIsPreviewOpen(false);
