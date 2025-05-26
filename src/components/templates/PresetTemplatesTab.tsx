@@ -13,6 +13,18 @@ interface PresetTemplate {
   fontFamily: string;
   hasAnimation?: boolean;
   animationType?: string;
+  backgroundType?: 'color' | 'gradient' | 'animated' | 'image';
+  backgroundConfig?: {
+    color?: string;
+    gradient?: {
+      from: string;
+      to: string;
+    };
+    animation?: string;
+    baseColor?: string;
+    image?: string;
+    overlay?: string;
+  };
 }
 
 interface PresetTemplatesTabProps {

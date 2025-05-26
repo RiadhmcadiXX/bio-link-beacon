@@ -2,6 +2,8 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
+import { renderAnimationBackground } from "@/utils/templateAnimations";
+import { templatesLibrary } from "@/constants/templates";
 
 interface LivePreviewProps {
   profile: {
@@ -41,6 +43,9 @@ export const LivePreview = ({
   gradientFrom,
   gradientTo
 }: LivePreviewProps) => {
+  // Get template configuration
+  const templateConfig = templatesLibrary.find(t => t.id === template);
+
   // Generate styles based on template
   const getTemplateStyles = () => {
     switch (template) {
@@ -124,10 +129,10 @@ export const LivePreview = ({
           bio: 'text-xs text-gray-600',
           links: 'space-y-2'
         };
-      default: // default template
+      default: // default and preset templates
         return {
-          background: 'bg-gradient-to-br from-purple-50 to-purple-100',
-          container: 'max-w-full mx-auto px-4 py-6',
+          background: '', // Will use template background config
+          container: 'max-w-full mx-auto px-4 py-6 relative z-10',
           avatar: 'h-12 w-12',
           header: 'text-center mb-4',
           title: 'text-lg font-bold',
@@ -139,8 +144,8 @@ export const LivePreview = ({
 
   const styles = getTemplateStyles();
   
-  // Generate custom background style if needed
-  const getCustomBackgroundStyle = () => {
+  // Generate background style based on template configuration
+  const getBackgroundStyle = () => {
     if (template === 'custom') {
       if (gradientFrom && gradientTo) {
         return {
@@ -151,8 +156,38 @@ export const LivePreview = ({
           backgroundColor: customColor
         };
       }
+      return {};
     }
-    return {};
+
+    if (!templateConfig?.backgroundConfig) {
+      return {};
+    }
+
+    const { backgroundType, backgroundConfig } = templateConfig;
+
+    switch (backgroundType) {
+      case 'color':
+        return {
+          backgroundColor: backgroundConfig.color
+        };
+      case 'gradient':
+        return {
+          background: `linear-gradient(135deg, ${backgroundConfig.gradient?.from} 0%, ${backgroundConfig.gradient?.to} 100%)`
+        };
+      case 'image':
+        return {
+          backgroundImage: `linear-gradient(${backgroundConfig.overlay || 'rgba(0,0,0,0.3)'}, ${backgroundConfig.overlay || 'rgba(0,0,0,0.3)'}), url(${backgroundConfig.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        };
+      case 'animated':
+        return {
+          backgroundColor: backgroundConfig.baseColor || '#000000'
+        };
+      default:
+        return {};
+    }
   };
   
   // Add some sample links if none are provided
@@ -190,12 +225,28 @@ export const LivePreview = ({
   // Determine the effective theme color
   const effectiveThemeColor = customColor || themeColor;
 
+  // Determine text color based on background
+  const getTextColor = () => {
+    if (template === 'elegant-dark' || templateConfig?.backgroundType === 'image') {
+      return 'text-white';
+    }
+    if (template === 'gradient' || (templateConfig?.backgroundType === 'animated')) {
+      return 'text-white';
+    }
+    return '';
+  };
+
+  const textColorClass = getTextColor();
+
   return (
     <div 
-      className={`rounded-md overflow-hidden h-full ${styles.background}`}
-      style={getCustomBackgroundStyle()}
+      className={`rounded-md overflow-hidden h-full relative ${styles.background}`}
+      style={getBackgroundStyle()}
     >
-      <div className={`${styles.container} ${fontClass}`}>
+      {/* Render animated background if needed */}
+      {templateConfig?.backgroundType === 'animated' && renderAnimationBackground(template, profile)}
+      
+      <div className={`${styles.container} ${fontClass} ${textColorClass}`}>
         {template === 'modern' ? (
           <div className={styles.header}>
             <Avatar className={styles.avatar}>
