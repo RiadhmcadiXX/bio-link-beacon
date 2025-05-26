@@ -1,6 +1,4 @@
 
-// --- components/TemplateTabs/PresetTemplatesTab.tsx ---
-
 import React from "react";
 import { TemplateCard } from "@/components/TemplateCard";
 
@@ -13,7 +11,7 @@ interface PresetTemplate {
   fontFamily: string;
   hasAnimation?: boolean;
   animationType?: string;
-  backgroundType?: 'color' | 'gradient' | 'animated' | 'image';
+  backgroundType?: string;
   backgroundConfig?: {
     color?: string;
     gradient?: {
