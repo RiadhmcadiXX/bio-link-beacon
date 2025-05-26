@@ -4,9 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
 import { renderAnimationBackground } from "@/utils/templateAnimations";
 import { templatesLibrary } from "@/constants/templates";
+import { useUserTemplate } from "@/hooks/useUserTemplate";
 
 interface LivePreviewProps {
   profile: {
+    id?: string;
     username: string;
     display_name: string | null;
     bio: string | null;
@@ -43,8 +45,28 @@ export const LivePreview = ({
   gradientFrom,
   gradientTo
 }: LivePreviewProps) => {
-  // Get template configuration
+  // Get user template data if profile has an id
+  const { userTemplate } = useUserTemplate(profile.id);
+  
+  // Get template configuration from library
   const templateConfig = templatesLibrary.find(t => t.id === template);
+
+  // Use user template data if available, otherwise use props or template config
+  const effectiveTemplate = {
+    name: template,
+    buttonStyle: userTemplate?.button_style || buttonStyle || templateConfig?.buttonStyle || 'default',
+    fontFamily: userTemplate?.font_family || fontFamily || templateConfig?.fontFamily || 'default',
+    themeColor: userTemplate?.theme_color || themeColor || 'purple',
+    customColor: userTemplate?.custom_color || customColor,
+    gradientFrom: userTemplate?.gradient_from || gradientFrom,
+    gradientTo: userTemplate?.gradient_to || gradientTo,
+    backgroundType: userTemplate?.background_type || templateConfig?.backgroundType || 'color',
+    backgroundColor: userTemplate?.background_color || templateConfig?.backgroundConfig?.color,
+    backgroundImageUrl: userTemplate?.background_image_url || templateConfig?.backgroundConfig?.image,
+    backgroundOverlay: userTemplate?.background_overlay || templateConfig?.backgroundConfig?.overlay,
+    hasAnimation: userTemplate?.has_animation || templateConfig?.hasAnimation || false,
+    animationType: userTemplate?.animation_type || templateConfig?.animationType
+  };
 
   // Generate styles based on template
   const getTemplateStyles = () => {
@@ -100,9 +122,8 @@ export const LivePreview = ({
           links: 'space-y-2'
         };
       case 'custom':
-        // For custom template, use customized theme settings
-        // Check if using custom gradient
-        if (gradientFrom && gradientTo) {
+        // For custom template, use template data
+        if (effectiveTemplate.gradientFrom && effectiveTemplate.gradientTo) {
           return {
             background: '', // We'll use inline style for gradient
             container: 'max-w-full mx-auto px-4 py-6',
@@ -114,12 +135,11 @@ export const LivePreview = ({
           };
         }
         
-        // If using custom color or preset theme color
         return {
-          background: customColor ? '' : `bg-gradient-to-br ${
-            themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
-            themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
-            themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
+          background: effectiveTemplate.customColor ? '' : `bg-gradient-to-br ${
+            effectiveTemplate.themeColor === 'purple' ? 'from-purple-100 to-purple-200' :
+            effectiveTemplate.themeColor === 'blue' ? 'from-blue-100 to-blue-200' :
+            effectiveTemplate.themeColor === 'pink' ? 'from-pink-100 to-pink-200' :
             'from-orange-100 to-orange-200'
           }`,
           container: 'max-w-full mx-auto px-4 py-6',
@@ -147,43 +167,40 @@ export const LivePreview = ({
   // Generate background style based on template configuration
   const getBackgroundStyle = () => {
     if (template === 'custom') {
-      if (gradientFrom && gradientTo) {
+      if (effectiveTemplate.gradientFrom && effectiveTemplate.gradientTo) {
         return {
-          background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`
+          background: `linear-gradient(135deg, ${effectiveTemplate.gradientFrom} 0%, ${effectiveTemplate.gradientTo} 100%)`
         };
-      } else if (customColor) {
+      } else if (effectiveTemplate.customColor) {
         return {
-          backgroundColor: customColor
+          backgroundColor: effectiveTemplate.customColor
         };
       }
       return {};
     }
 
-    if (!templateConfig?.backgroundConfig) {
-      return {};
-    }
-
-    const { backgroundType, backgroundConfig } = templateConfig;
-
-    switch (backgroundType) {
+    switch (effectiveTemplate.backgroundType) {
       case 'color':
         return {
-          backgroundColor: backgroundConfig.color
+          backgroundColor: effectiveTemplate.backgroundColor || '#ffffff'
         };
       case 'gradient':
-        return {
-          background: `linear-gradient(135deg, ${backgroundConfig.gradient?.from} 0%, ${backgroundConfig.gradient?.to} 100%)`
-        };
+        if (templateConfig?.backgroundConfig?.gradient) {
+          return {
+            background: `linear-gradient(135deg, ${templateConfig.backgroundConfig.gradient.from} 0%, ${templateConfig.backgroundConfig.gradient.to} 100%)`
+          };
+        }
+        return {};
       case 'image':
         return {
-          backgroundImage: `linear-gradient(${backgroundConfig.overlay || 'rgba(0,0,0,0.3)'}, ${backgroundConfig.overlay || 'rgba(0,0,0,0.3)'}), url(${backgroundConfig.image})`,
+          backgroundImage: `linear-gradient(${effectiveTemplate.backgroundOverlay || 'rgba(0,0,0,0.3)'}, ${effectiveTemplate.backgroundOverlay || 'rgba(0,0,0,0.3)'}), url(${effectiveTemplate.backgroundImageUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         };
       case 'animated':
         return {
-          backgroundColor: backgroundConfig.baseColor || '#000000'
+          backgroundColor: templateConfig?.backgroundConfig?.baseColor || '#000000'
         };
       default:
         return {};
@@ -220,17 +237,17 @@ export const LivePreview = ({
     default: "font-sans",
   };
   
-  const fontClass = fontClassMap[fontFamily] || "font-sans";
+  const fontClass = fontClassMap[effectiveTemplate.fontFamily] || "font-sans";
 
   // Determine the effective theme color
-  const effectiveThemeColor = customColor || themeColor;
+  const effectiveThemeColor = effectiveTemplate.customColor || effectiveTemplate.themeColor;
 
   // Determine text color based on background
   const getTextColor = () => {
-    if (template === 'elegant-dark' || templateConfig?.backgroundType === 'image') {
+    if (template === 'elegant-dark' || effectiveTemplate.backgroundType === 'image') {
       return 'text-white';
     }
-    if (template === 'gradient' || (templateConfig?.backgroundType === 'animated')) {
+    if (template === 'gradient' || (effectiveTemplate.backgroundType === 'animated')) {
       return 'text-white';
     }
     return '';
@@ -244,7 +261,7 @@ export const LivePreview = ({
       style={getBackgroundStyle()}
     >
       {/* Render animated background if needed */}
-      {templateConfig?.backgroundType === 'animated' && renderAnimationBackground(template, profile)}
+      {effectiveTemplate.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: effectiveTemplate.animationType })}
       
       <div className={`${styles.container} ${fontClass} ${textColorClass}`}>
         {template === 'modern' ? (
@@ -277,10 +294,10 @@ export const LivePreview = ({
               themeColor={effectiveThemeColor}
               onClick={() => {}} 
               template={template}
-              buttonStyle={buttonStyle}
-              fontFamily={fontFamily}
-              gradientFrom={gradientFrom}
-              gradientTo={gradientTo}
+              buttonStyle={effectiveTemplate.buttonStyle}
+              fontFamily={effectiveTemplate.fontFamily}
+              gradientFrom={effectiveTemplate.gradientFrom}
+              gradientTo={effectiveTemplate.gradientTo}
             />
           ))}
         </div>

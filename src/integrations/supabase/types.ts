@@ -126,6 +126,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_templates: {
+        Row: {
+          animation_type: string | null
+          background_color: string | null
+          background_image_url: string | null
+          background_overlay: string | null
+          background_type: string
+          button_style: string
+          created_at: string
+          custom_color: string | null
+          font_family: string
+          gradient_from: string | null
+          gradient_to: string | null
+          has_animation: boolean | null
+          id: string
+          template_name: string
+          theme_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          animation_type?: string | null
+          background_color?: string | null
+          background_image_url?: string | null
+          background_overlay?: string | null
+          background_type?: string
+          button_style?: string
+          created_at?: string
+          custom_color?: string | null
+          font_family?: string
+          gradient_from?: string | null
+          gradient_to?: string | null
+          has_animation?: boolean | null
+          id?: string
+          template_name?: string
+          theme_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          animation_type?: string | null
+          background_color?: string | null
+          background_image_url?: string | null
+          background_overlay?: string | null
+          background_type?: string
+          button_style?: string
+          created_at?: string
+          custom_color?: string | null
+          font_family?: string
+          gradient_from?: string | null
+          gradient_to?: string | null
+          has_animation?: boolean | null
+          id?: string
+          template_name?: string
+          theme_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

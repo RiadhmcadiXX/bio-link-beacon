@@ -1,16 +1,18 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DashboardNav } from "@/components/DashboardNav";
 import { TemplateCard } from "@/components/TemplateCard";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
 import { Check, Eye, Palette } from "lucide-react";
+import { templatesLibrary } from "@/constants/templates";
+import { useTemplateMutations } from "@/components/dashboard/TemplateMutations";
+import { useUserTemplate } from "@/hooks/useUserTemplate";
 
 interface Profile {
   id: string;
@@ -22,9 +24,6 @@ interface Profile {
   theme: string | null;
   button_style?: string | null;
   font_family?: string | null;
-  customColor?: string | null;
-  gradientFrom?: string | null;
-  gradientTo?: string | null;
   animation_type?: string | null;
 }
 
@@ -37,155 +36,15 @@ interface Link {
   clicks: number;
 }
 
-// Template data with added customization options and animations
-const templates = [
-  {
-    id: 'default',
-    name: 'Default',
-    description: 'The classic LinkBeacon layout with a clean, simple design.',
-    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template1.png',
-    buttonStyle: 'default',
-    fontFamily: 'default',
-    backgroundType: 'gradient',
-    backgroundConfig: {
-      gradient: {
-        from: '#f3e8ff',
-        to: '#e9d5ff'
-      }
-    }
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'A clean, minimalist design with focus on your content.',
-    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template2.png',
-    buttonStyle: 'minimal',
-    fontFamily: 'default',
-    backgroundType: 'color',
-    backgroundConfig: {
-      color: '#ffffff'
-    }
-  },
-  {
-    id: 'elegant-dark',
-    name: 'Elegant Dark',
-    description: 'A sophisticated dark theme with a premium feel.',
-    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//template3.png',
-    buttonStyle: 'outline',
-    fontFamily: 'lobster',
-    backgroundType: 'color',
-    backgroundConfig: {
-      color: '#111827'
-    }
-  },
-  {
-    id: 'gradient',
-    name: 'Gradient',
-    description: 'A vibrant background with gradient colors that pop.',
-    previewImage: 'https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/templates//gradient%20template%20pink.png',
-    buttonStyle: 'gradient',
-    fontFamily: 'display',
-    backgroundType: 'gradient',
-    backgroundConfig: {
-      gradient: {
-        from: '#a855f7',
-        to: '#ec4899'
-      }
-    }
-  },
-  {
-    id: 'bubbles',
-    name: 'Bubbles',
-    description: 'A fun, playful design with a light blue theme.',
-    previewImage: 'https://via.placeholder.com/300x200/e6f7ff/4a90e2?text=Bubbles',
-    buttonStyle: 'rounded',
-    fontFamily: 'font-lobster',
-    backgroundType: 'color',
-    backgroundConfig: {
-      color: '#eff6ff'
-    }
-  },
-  {
-    id: 'modern',
-    name: 'Modern',
-    description: 'A contemporary layout with a sleek side profile.',
-    previewImage: 'https://via.placeholder.com/300x200/f5f5f5/808080?text=Modern',
-    buttonStyle: 'shadow',
-    fontFamily: 'mono',
-    backgroundType: 'color',
-    backgroundConfig: {
-      color: '#f5f5f5'
-    }
-  },
-  // New templates with animations
-  {
-    id: 'floating-particles',
-    name: 'Floating Particles',
-    description: 'Elegant background with animated floating particles.',
-    previewImage: 'https://via.placeholder.com/300x200/000022/ffffff?text=Particles',
-    buttonStyle: 'gradient',
-    fontFamily: 'raleway',
-    hasAnimation: true,
-    animationType: 'particles',
-    backgroundType: 'animated',
-    backgroundConfig: {
-      animation: 'particles',
-      baseColor: '#000022'
-    }
-  },
-  {
-    id: 'wave-background',
-    name: 'Wave Background',
-    description: 'Soothing animated wave patterns in the background.',
-    previewImage: 'https://via.placeholder.com/300x200/003366/ffffff?text=Waves',
-    buttonStyle: 'default',
-    fontFamily: 'poppins',
-    hasAnimation: true,
-    animationType: 'waves',
-    backgroundType: 'animated',
-    backgroundConfig: {
-      animation: 'waves',
-      baseColor: '#003366'
-    }
-  },
-  {
-    id: 'gradient-flow',
-    name: 'Gradient Flow',
-    description: 'Smoothly transitioning color gradients that create depth.',
-    previewImage: 'https://via.placeholder.com/300x200/4b0082/ffffff?text=Flow',
-    buttonStyle: 'minimal',
-    fontFamily: 'montserrat',
-    hasAnimation: true,
-    animationType: 'gradientFlow',
-    backgroundType: 'animated',
-    backgroundConfig: {
-      animation: 'gradientFlow',
-      baseColor: '#4b0082'
-    }
-  },
-  // New image background template
-  {
-    id: 'nature-scene',
-    name: 'Nature Scene',
-    description: 'Beautiful nature background with overlay for readability.',
-    previewImage: 'https://via.placeholder.com/300x200/228B22/ffffff?text=Nature',
-    buttonStyle: 'shadow',
-    fontFamily: 'poppins',
-    backgroundType: 'image',
-    backgroundConfig: {
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-      overlay: 'rgba(0, 0, 0, 0.3)'
-    }
-  }
-];
-
 const TemplatesPage = () => {
   const { user } = useAuthContext();
-  const queryClient = useQueryClient();
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("preset");
+
+  const { updateTemplate } = useTemplateMutations(user?.id);
+  const { userTemplate } = useUserTemplate(user?.id);
 
   // Get profile data
   const { 
@@ -228,81 +87,32 @@ const TemplatesPage = () => {
     enabled: !!user,
   });
 
-  // Template update mutation
-  const updateTemplate = useMutation({
-    mutationFn: async ({ 
-      template, 
-      theme = null, 
-      buttonStyle = null, 
-      fontFamily = null,
-      customColor = null,
-      gradientFrom = null,
-      gradientTo = null,
-      animationType = null
-    }: { 
-      template: string, 
-      theme?: string | null, 
-      buttonStyle?: string | null, 
-      fontFamily?: string | null,
-      customColor?: string | null,
-      gradientFrom?: string | null,
-      gradientTo?: string | null,
-      animationType?: string | null
-    }) => {
-      if (!user) throw new Error("Not authenticated");
-      
-      const updateData: any = { template };
-      
-      // Only include these fields if they are provided
-      if (theme !== null) updateData.theme = theme;
-      if (buttonStyle !== null) updateData.button_style = buttonStyle;
-      if (fontFamily !== null) updateData.font_family = fontFamily;
-      if (customColor !== null) updateData.custom_color = customColor;
-      if (gradientFrom !== null) updateData.gradient_from = gradientFrom;
-      if (gradientTo !== null) updateData.gradient_to = gradientTo;
-      if (animationType !== null) updateData.animation_type = animationType;
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      return template;
-    },
-    onSuccess: (template) => {
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      toast.success(`Template updated to ${template}!`);
-      setIsPreviewOpen(false);
-      setIsCustomDialogOpen(false);
-    },
-    onError: (error) => {
-      console.error("Failed to update template:", error);
-      toast.error("Failed to update template");
-    }
-  });
-
   const handlePreviewTemplate = (templateId: string) => {
     setPreviewTemplate(templateId);
     setIsPreviewOpen(true);
   };
 
   const handleApplyTemplate = (templateId: string) => {
-    const selectedTemplate = templates.find(t => t.id === templateId);
+    const selectedTemplate = templatesLibrary.find(t => t.id === templateId);
     if (selectedTemplate) {
       updateTemplate.mutate({
         template: templateId,
         buttonStyle: selectedTemplate.buttonStyle,
         fontFamily: selectedTemplate.fontFamily,
         animationType: selectedTemplate.hasAnimation ? selectedTemplate.animationType : null,
+        backgroundType: selectedTemplate.backgroundType,
+        backgroundColor: selectedTemplate.backgroundConfig?.color,
+        backgroundImageUrl: selectedTemplate.backgroundConfig?.image,
+        backgroundOverlay: selectedTemplate.backgroundConfig?.overlay,
         // Clear custom settings when applying preset template
         customColor: null,
-        gradientFrom: null,
-        gradientTo: null
+        gradientFrom: selectedTemplate.backgroundConfig?.gradient?.from,
+        gradientTo: selectedTemplate.backgroundConfig?.gradient?.to
       });
     } else {
       updateTemplate.mutate({ template: templateId });
     }
+    setIsPreviewOpen(false);
   };
 
   const handleOpenCustomDialog = () => {
@@ -326,6 +136,7 @@ const TemplatesPage = () => {
       gradientFrom: customSettings.gradientFrom,
       gradientTo: customSettings.gradientTo
     });
+    setIsCustomDialogOpen(false);
   };
 
   if (isProfileLoading) {
@@ -359,6 +170,9 @@ const TemplatesPage = () => {
     );
   }
 
+  // Get current template from user_templates table or fallback to profile
+  const currentTemplate = userTemplate?.template_name || profileData?.template || 'default';
+
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Side Navigation */}
@@ -383,14 +197,14 @@ const TemplatesPage = () => {
             <TabsContent value="preset">
               {/* Preset Templates Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {templates.map((template) => (
+                {templatesLibrary.map((template) => (
                   <TemplateCard
                     key={template.id}
                     id={template.id}
                     name={template.name}
                     description={template.description}
                     previewImage={template.previewImage}
-                    isActive={profileData?.template === template.id}
+                    isActive={currentTemplate === template.id}
                     buttonStyle={template.buttonStyle}
                     fontFamily={template.fontFamily}
                     hasAnimation={template.hasAnimation}
@@ -416,7 +230,7 @@ const TemplatesPage = () => {
                   <Palette className="h-4 w-4 mr-2" /> Customize Template
                 </Button>
                 
-                {profileData?.template === 'custom' && (
+                {currentTemplate === 'custom' && (
                   <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
                     <p className="flex items-center text-green-700">
                       <Check className="h-4 w-4 mr-2" /> 
@@ -438,17 +252,17 @@ const TemplatesPage = () => {
       </div>
 
       {/* Template Preview Dialog */}
-      {profileData && (previewTemplate || profileData.template === 'custom') && (
+      {profileData && (previewTemplate || currentTemplate === 'custom') && (
         <TemplatePreview
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          template={previewTemplate || profileData.template || 'default'}
+          template={previewTemplate || currentTemplate}
           profile={{
             ...profileData,
-            customColor: profileData.customColor || null,
-            gradientFrom: profileData.gradientFrom || null,
-            gradientTo: profileData.gradientTo || null,
-            animationType: profileData.animation_type || null
+            customColor: userTemplate?.custom_color || null,
+            gradientFrom: userTemplate?.gradient_from || null,
+            gradientTo: userTemplate?.gradient_to || null,
+            animationType: userTemplate?.animation_type || null
           }}
           links={links || []}
           onApply={() => previewTemplate ? handleApplyTemplate(previewTemplate) : null}
@@ -462,12 +276,12 @@ const TemplatesPage = () => {
           onClose={() => setIsCustomDialogOpen(false)}
           onSubmit={handleCustomTemplateSubmit}
           initialSettings={{
-            theme: profileData.theme || 'purple',
-            buttonStyle: profileData.button_style || 'default',
-            fontFamily: profileData.font_family || 'default',
-            customColor: profileData.customColor || undefined,
-            gradientFrom: profileData.gradientFrom || undefined,
-            gradientTo: profileData.gradientTo || undefined
+            theme: userTemplate?.theme_color || profileData.theme || 'purple',
+            buttonStyle: userTemplate?.button_style || profileData.button_style || 'default',
+            fontFamily: userTemplate?.font_family || profileData.font_family || 'default',
+            customColor: userTemplate?.custom_color || undefined,
+            gradientFrom: userTemplate?.gradient_from || undefined,
+            gradientTo: userTemplate?.gradient_to || undefined
           }}
           profileData={{
             username: profileData.username,
