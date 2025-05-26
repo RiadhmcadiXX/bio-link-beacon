@@ -17,6 +17,7 @@ import { PresetTemplatesTab } from "@/components/templates/PresetTemplatesTab";
 import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { CustomTemplateTab } from "@/components/templates/CustomTemplateTab";
+import { LivePreview } from "@/components/LivePreview";
 import { Link, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { templatesLibrary } from "@/constants/templates";
@@ -468,191 +469,232 @@ const Dashboard = () => {
           <UpgradeBanner feature="embed_links" />
         )}
         
-        <Tabs defaultValue="links" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center mb-6">
-            <TabsList className="grid grid-cols-5 w-full md:w-auto">
-              <TabsTrigger value="links" className="flex items-center gap-1">
-                <LinkIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">My Links</span>
-              </TabsTrigger>
-              <TabsTrigger value="preset-templates" className="flex items-center gap-1">
-                <LayoutTemplate className="h-4 w-4" />
-                <span className="hidden sm:inline">Preset Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="custom-templates" className="flex items-center gap-1">
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Custom Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-1">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-1">
-                <BarChart2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Analytics</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {activeTab === 'links' && (
-              <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
-                <Plus className="h-4 w-4 mr-2" /> Add Link
-              </Button>
-            )}
+        {/* Main content with live preview */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Live Preview - Left Side */}
+          <div className="lg:col-span-4 xl:col-span-3">
+            <Card className="p-4 sticky top-6">
+              <h2 className="text-lg font-semibold mb-4">Live Preview</h2>
+              <div className="aspect-[9/16] bg-gray-50 rounded-lg overflow-hidden">
+                {profileData ? (
+                  <LivePreview
+                    profile={{
+                      username: profileData.username,
+                      display_name: profileData.display_name,
+                      bio: profileData.bio,
+                      avatar_url: profileData.avatar_url,
+                      theme: profileData.theme,
+                      button_style: profileData.button_style,
+                      font_family: profileData.font_family,
+                    }}
+                    links={links || []}
+                    template={profileData.template || 'default'}
+                    themeColor={profileData.theme || 'purple'}
+                    buttonStyle={profileData.button_style || 'default'}
+                    fontFamily={profileData.font_family || 'default'}
+                    customColor={profileData.customColor || undefined}
+                    gradientFrom={profileData.gradientFrom || undefined}
+                    gradientTo={profileData.gradientTo || undefined}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Loading preview...
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
 
-          {/* My Links Tab - Updated with drag and drop */}
-          <TabsContent value="links" className="space-y-4">
-            <h1 className="text-2xl font-bold">My Links</h1>
+          {/* Main Dashboard Content - Right Side */}
+          <div className="lg:col-span-8 xl:col-span-9">
+            <Tabs defaultValue="links" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="flex justify-between items-center mb-6">
+                <TabsList className="grid grid-cols-5 w-full md:w-auto">
+                  <TabsTrigger value="links" className="flex items-center gap-1">
+                    <LinkIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Links</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="preset-templates" className="flex items-center gap-1">
+                    <LayoutTemplate className="h-4 w-4" />
+                    <span className="hidden sm:inline">Preset Templates</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="custom-templates" className="flex items-center gap-1">
+                    <Palette className="h-4 w-4" />
+                    <span className="hidden sm:inline">Custom Templates</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="flex items-center gap-1">
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden sm:inline">Settings</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex items-center gap-1">
+                    <BarChart2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Analytics</span>
+                  </TabsTrigger>
+                </TabsList>
 
-            {linksLoading ? (
-              <div className="text-center py-6">Loading links...</div>
-            ) : linksError ? (
-              <Card className="p-6 text-center">
-                <p className="text-red-500">Error loading links</p>
-                <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['links', user?.id] })} className="mt-2">
-                  Retry
-                </Button>
-              </Card>
-            ) : links && links.length > 0 ? (
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="links-list">
-                  {(provided) => (
-                    <div 
-                      className="space-y-3"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {links.map((link, index) => (
-                        <Draggable 
-                          key={link.id} 
-                          draggableId={link.id} 
-                          index={index}
+                {activeTab === 'links' && (
+                  <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                    <Plus className="h-4 w-4 mr-2" /> Add Link
+                  </Button>
+                )}
+              </div>
+
+              {/* My Links Tab - Updated with drag and drop */}
+              <TabsContent value="links" className="space-y-4">
+                <h1 className="text-2xl font-bold">My Links</h1>
+
+                {linksLoading ? (
+                  <div className="text-center py-6">Loading links...</div>
+                ) : linksError ? (
+                  <Card className="p-6 text-center">
+                    <p className="text-red-500">Error loading links</p>
+                    <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['links', user?.id] })} className="mt-2">
+                      Retry
+                    </Button>
+                  </Card>
+                ) : links && links.length > 0 ? (
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId="links-list">
+                      {(provided) => (
+                        <div 
+                          className="space-y-3"
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
                         >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
+                          {links.map((link, index) => (
+                            <Draggable 
+                              key={link.id} 
+                              draggableId={link.id} 
+                              index={index}
                             >
-                              <LinkItem
-                                link={link}
-                                onEdit={() => handleEditLink(link)}
-                                onDelete={() => handleDeleteLink(link.id)}
-                                isDragging={snapshot.isDragging}
-                                dragHandleProps={provided.dragHandleProps}
-                              />
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                >
+                                  <LinkItem
+                                    link={link}
+                                    onEdit={() => handleEditLink(link)}
+                                    onDelete={() => handleDeleteLink(link.id)}
+                                    isDragging={snapshot.isDragging}
+                                    dragHandleProps={provided.dragHandleProps}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                ) : (
+                  <Card className="p-6 text-center">
+                    <p className="mb-4">You don't have any links yet.</p>
+                    <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                      <Plus className="h-4 w-4 mr-2" /> Add your first link
+                    </Button>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Preset Templates Tab */}
+              <TabsContent value="preset-templates">
+                <PresetTemplatesTab
+                  templates={templatesLibrary}
+                  activeTemplateId={profileData?.template ?? null}
+                  onApply={handleApplyTemplate}
+                  onPreview={handlePreviewTemplate}
+                />
+              </TabsContent>
+
+              {/* Custom Templates Tab */}
+              <TabsContent value="custom-templates" className="space-y-4">
+                <h1 className="text-2xl font-bold">Custom Templates</h1>
+                <CustomTemplateTab
+                  profileData={profileData}
+                  onOpenDialog={handleOpenCustomDialog}
+                  onPreview={() => setIsPreviewOpen(true)}
+                />
+              </TabsContent>
+
+              {/* Settings Tab */}
+              <TabsContent value="settings" className="space-y-4">
+                <h1 className="text-2xl font-bold">Settings</h1>
+
+                {profileLoading ? (
+                  <div className="text-center py-6">Loading profile settings...</div>
+                ) : profileData ? (
+                  <Card className="p-6">
+                    <h2 className="text-xl font-medium mb-4">Profile Image</h2>
+                    <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
+                      <AvatarUpload
+                        userId={user?.id || ''}
+                        existingUrl={profileData.avatar_url}
+                        onAvatarUpdate={handleAvatarUpdate}
+                        size="lg"
+                      />
+                      <div className="space-y-4 flex-1">
+                        <div>
+                          <h3 className="text-lg font-medium">Profile Settings</h3>
+                          <p className="text-sm text-gray-500">
+                            For more profile settings, please visit the settings page.
+                          </p>
+                        </div>
+
+                        <Button asChild variant="outline" className="w-full sm:w-auto">
+                          <Link to="/settings">Manage Your Profile</Link>
+                        </Button>
+
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-6 text-center">
+                    <p className="text-red-500">Error loading profile</p>
+                    <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })} className="mt-2">
+                      Retry
+                    </Button>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Analytics Tab */}
+              <TabsContent value="analytics" className="space-y-4">
+                <h1 className="text-2xl font-bold">Analytics</h1>
+                <Card className="p-6">
+                  <p className="text-center mb-4">View insights about your bio link performance</p>
+                  {links && links.length > 0 ? (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-medium">Link Performance</h2>
+                      <div className="space-y-2">
+                        {links.map(link => (
+                          <div key={link.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                            <div className="font-medium">{link.title}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">{link.clicks || 0} clicks</span>
                             </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p>No link data available yet.</p>
+                      <Button
+                        onClick={() => setActiveTab('links')}
+                        className="mt-2 bg-brand-purple hover:bg-brand-purple/90"
+                      >
+                        Create Your First Link
+                      </Button>
                     </div>
                   )}
-                </Droppable>
-              </DragDropContext>
-            ) : (
-              <Card className="p-6 text-center">
-                <p className="mb-4">You don't have any links yet.</p>
-                <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
-                  <Plus className="h-4 w-4 mr-2" /> Add your first link
-                </Button>
-              </Card>
-            )}
-          </TabsContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
 
-          {/* Preset Templates Tab */}
-          <TabsContent value="preset-templates">
-            <PresetTemplatesTab
-              templates={templatesLibrary}
-              activeTemplateId={profileData?.template ?? null}
-              onApply={handleApplyTemplate}
-              onPreview={handlePreviewTemplate}
-            />
-          </TabsContent>
-
-          {/* Custom Templates Tab */}
-          <TabsContent value="custom-templates" className="space-y-4">
-            <h1 className="text-2xl font-bold">Custom Templates</h1>
-            <CustomTemplateTab
-              profileData={profileData}
-              onOpenDialog={handleOpenCustomDialog}
-              onPreview={() => setIsPreviewOpen(true)}
-            />
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-4">
-            <h1 className="text-2xl font-bold">Settings</h1>
-
-            {profileLoading ? (
-              <div className="text-center py-6">Loading profile settings...</div>
-            ) : profileData ? (
-              <Card className="p-6">
-                <h2 className="text-xl font-medium mb-4">Profile Image</h2>
-                <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
-                  <AvatarUpload
-                    userId={user?.id || ''}
-                    existingUrl={profileData.avatar_url}
-                    onAvatarUpdate={handleAvatarUpdate}
-                    size="lg"
-                  />
-                  <div className="space-y-4 flex-1">
-                    <div>
-                      <h3 className="text-lg font-medium">Profile Settings</h3>
-                      <p className="text-sm text-gray-500">
-                        For more profile settings, please visit the settings page.
-                      </p>
-                    </div>
-
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                      <Link to="/settings">Manage Your Profile</Link>
-                    </Button>
-
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card className="p-6 text-center">
-                <p className="text-red-500">Error loading profile</p>
-                <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })} className="mt-2">
-                  Retry
-                </Button>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-4">
-            <h1 className="text-2xl font-bold">Analytics</h1>
-            <Card className="p-6">
-              <p className="text-center mb-4">View insights about your bio link performance</p>
-              {links && links.length > 0 ? (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-medium">Link Performance</h2>
-                  <div className="space-y-2">
-                    {links.map(link => (
-                      <div key={link.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                        <div className="font-medium">{link.title}</div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">{link.clicks || 0} clicks</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p>No link data available yet.</p>
-                  <Button
-                    onClick={() => setActiveTab('links')}
-                    className="mt-2 bg-brand-purple hover:bg-brand-purple/90"
-                  >
-                    Create Your First Link
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-        </Tabs>
         {/* Template Preview Dialog */}
         {profileData && (previewTemplate || profileData.template === 'custom') && (
           <TemplatePreview
