@@ -145,7 +145,7 @@ export const templatesLibrary = [
         id: 'nature-scene',
         name: 'Nature Scene',
         description: 'Beautiful nature background with overlay for readability.',
-        previewImage: 'https://via.placeholder.com/300x200/228B22/ffffff?text=Nature',
+        previewImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
         buttonStyle: 'shadow',
         fontFamily: 'poppins',
         backgroundType: 'image',

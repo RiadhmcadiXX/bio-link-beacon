@@ -166,7 +166,7 @@ export const getTemplateStyles = (
 
     case 'nature-scene':
       return {
-        background: '',
+        background: 'bg-[#000022]',
         container: 'max-w-md mx-auto px-5 py-8 relative z-10',
         avatar: 'h-20 w-20 ring-2 ring-white/30',
         header: 'text-center mb-6 text-white',
