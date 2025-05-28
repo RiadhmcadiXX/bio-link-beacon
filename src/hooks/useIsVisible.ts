@@ -1,18 +1,32 @@
-// hooks/useIsVisible.ts
+
 import { useEffect, useRef, useState } from 'react';
 
-export const useIsVisible = <T extends HTMLElement>(): [React.RefObject<T>, boolean] => {
+interface UseIsVisibleOptions {
+  threshold?: number;
+  rootMargin?: string;
+  triggerOnce?: boolean;
+}
+
+export const useIsVisible = <T extends HTMLElement>(
+  options: UseIsVisibleOptions = {}
+): [React.RefObject<T>, boolean] => {
+  const { threshold = 0.2, rootMargin = '0px', triggerOnce = false } = options;
   const ref = useRef<T>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsVisible(entry.isIntersecting);
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        } else if (!triggerOnce) {
+          setIsVisible(false);
+        }
       },
       {
         root: null,
-        threshold: 0.1,
+        threshold,
+        rootMargin,
       }
     );
 
@@ -23,7 +37,7 @@ export const useIsVisible = <T extends HTMLElement>(): [React.RefObject<T>, bool
     return () => {
       if (ref.current) observer.unobserve(ref.current);
     };
-  }, []);
+  }, [threshold, rootMargin, triggerOnce]);
 
   return [ref, isVisible];
 };
