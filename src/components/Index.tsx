@@ -2,19 +2,20 @@
 import { useState, useEffect } from "react";
 import NavBar from "@/components/NavBar";
 import HeroSection from "@/components/sections/HeroSection";
-import FeaturesSection from "@/components/sections/FeaturesSection";
+import CustomizableBioSection from "@/components/sections/CustomizableBioSection";
+import LinkManagerSection from "@/components/sections/LinkManagerSection";
+import ShareProfileSection from "@/components/sections/ShareProfileSection";
+import AnalyticsSection from "@/components/sections/AnalyticsSection";
+import LinkTypesSection from "@/components/sections/LinkTypesSection";
+import PreviewSection from "@/components/sections/PreviewSection";
+import TemplateSection from "@/components/sections/TemplateSection";
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/Footer";
 import SignUpModal from "@/components/SignUpModal";
-import { useIsVisible } from "@/hooks/useIsVisible";
 
 const Index = () => {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
-  const [heroRef, isHeroVisible] = useIsVisible<HTMLDivElement>();
-  const [featuresRef, isFeaturesVisible] = useIsVisible<HTMLDivElement>();
-  const [pricingRef, isPricingVisible] = useIsVisible<HTMLDivElement>();
-  const [faqRef, isFaqVisible] = useIsVisible<HTMLDivElement>();
   const [scrollY, setScrollY] = useState(0);
 
   const handleGetStartedClick = () => {
@@ -30,132 +31,44 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    // Add smooth scrolling behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
-      {/* Navigation */}
-      <NavBar onGetStartedClick={handleGetStartedClick} />
+    <div className="min-h-screen bg-white">
+      {/* Navigation - Fixed */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <NavBar onGetStartedClick={handleGetStartedClick} />
+      </div>
 
       <main className="relative">
-        {/* Global animated background elements */}
-        <div 
-          className="fixed top-20 -left-20 w-64 h-64 rounded-full bg-brand-lime/30 transition-transform duration-1000 ease-out pointer-events-none"
-          style={{
-            transform: `translateY(${scrollY * 0.3}px) scale(${1 + scrollY * 0.0002})`
-          }}
-        />
-        <div 
-          className="fixed bottom-10 -right-20 w-80 h-80 rounded-full bg-brand-blue/20 transition-transform duration-1000 ease-out pointer-events-none"
-          style={{
-            transform: `translateY(${scrollY * -0.2}px) scale(${1 + scrollY * 0.0001})`
-          }}
-        />
-
         {/* Hero Section */}
-        <div 
-          ref={heroRef} 
-          className={`transition-all duration-1000 ease-out ${
-            isHeroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-          style={{
-            transform: `translateY(${scrollY * -0.1}px)`
-          }}
-        >
-          <HeroSection onGetStartedClick={handleGetStartedClick} />
-        </div>
+        <HeroSection onGetStartedClick={handleGetStartedClick} />
 
-        {/* Features Section */}
-        <div 
-          ref={featuresRef}
-          className={`relative z-10 transition-all duration-1000 ease-out ${
-            isFeaturesVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95'
-          }`}
-          style={{
-            transform: `translateY(${scrollY * -0.05}px)`
-          }}
-        >
-          <div 
-            className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-brand-lime/50 transition-all duration-1000 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * 0.15}px) rotate(${scrollY * 0.1}deg)`,
-              opacity: isFeaturesVisible ? 0.5 : 0
-            }}
-          />
-          <div 
-            className="absolute bottom-10 -right-20 w-80 h-80 rounded-full bg-brand-blue/50 transition-all duration-1000 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * -0.1}px) rotate(${scrollY * -0.05}deg)`,
-              opacity: isFeaturesVisible ? 0.5 : 0
-            }}
-          />
-          <FeaturesSection />
-        </div>
+        {/* Feature Mockup Sections - Each full screen */}
+        <CustomizableBioSection />
+        <LinkManagerSection />
+        <ShareProfileSection />
+        <AnalyticsSection />
+        <LinkTypesSection />
+        <PreviewSection />
+        <TemplateSection />
 
         {/* Pricing Section */}
-        <div 
-          ref={pricingRef}
-          className={`relative z-10 transition-all duration-1200 ease-out ${
-            isPricingVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-16 scale-90'
-          }`}
-          style={{
-            transform: `translateY(${scrollY * -0.03}px)`
-          }}
-        >
-          <div 
-            className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-brand-lime/60 transition-all duration-1200 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * 0.2}px) scale(${isPricingVisible ? 1 : 0.5})`,
-              opacity: isPricingVisible ? 0.6 : 0
-            }}
-          />
-          <div 
-            className="absolute bottom-10 -right-20 w-80 h-80 rounded-full bg-brand-blue/50 transition-all duration-1200 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * -0.15}px) scale(${isPricingVisible ? 1 : 0.7})`,
-              opacity: isPricingVisible ? 0.5 : 0
-            }}
-          />
-          <PricingSection />
-        </div>
+        <PricingSection />
 
         {/* FAQ Section */}
-        <div className="relative">
-          <div 
-            className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-brand-lime/30 blur-3xl transition-all duration-1500 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * 0.25}px) scale(${isFaqVisible ? 1.2 : 0.3})`,
-              opacity: isFaqVisible ? 0.3 : 0
-            }}
-          />
-          <div 
-            className="absolute bottom-10 -right-20 w-80 h-80 rounded-full bg-brand-blue/20 blur-3xl transition-all duration-1500 pointer-events-none"
-            style={{
-              transform: `translateY(${scrollY * -0.2}px) scale(${isFaqVisible ? 1.1 : 0.4})`,
-              opacity: isFaqVisible ? 0.2 : 0
-            }}
-          />
-          
-          <div 
-            ref={faqRef}
-            className={`relative z-10 transition-all duration-1500 ease-out ${
-              isFaqVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-20 scale-85'
-            }`}
-            style={{
-              transform: `translateY(${scrollY * -0.02}px)`
-            }}
-          >
-            <FAQSection />
-          </div>
-        </div>
+        <FAQSection />
       </main>
 
       {/* Footer */}
-      <div 
-        className={`transition-all duration-1000 ease-out ${
-          isFaqVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
-        <Footer />
-      </div>
+      <Footer />
 
       <SignUpModal
         isOpen={isSignUpModalOpen}
