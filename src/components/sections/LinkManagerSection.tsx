@@ -18,7 +18,7 @@ const LinkManagerSection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-500 flex items-center justify-center relative overflow-hidden"
     >
       {/* Background decorations */}
       <div className="absolute top-20 -right-20 w-64 h-64 rounded-full bg-blue-200/30 blur-3xl" />

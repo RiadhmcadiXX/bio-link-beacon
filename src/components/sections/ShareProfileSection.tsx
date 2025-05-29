@@ -18,7 +18,7 @@ const ShareProfileSection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-500 flex items-center justify-center relative overflow-hidden"
     >
       {/* Background decorations */}
       <div className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-green-200/30 blur-3xl" />

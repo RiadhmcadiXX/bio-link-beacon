@@ -70,7 +70,7 @@ const HeroSection = ({ onGetStartedClick }: HeroSectionProps) => {
           ${showButtons ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <Button
             onClick={onGetStartedClick}
-            className="btn btn-lg btn-primary px-8 py-6 text-lg rounded-full transition-all duration-300 
+            className="btn btn-lg btn-primary text-whiteCream px-8 py-6 text-lg rounded-full transition-all duration-300 
               hover:shadow-lg hover:shadow-primary/40 hover:scale-105"
           >
             Get Started

@@ -18,7 +18,7 @@ const CustomizableBioSection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-400 flex items-center justify-center relative overflow-hidden"
     >
       {/* Background decorations */}
       <div className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-purple-200/30 blur-3xl" />
