@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
+import { SocialIcons } from "@/components/SocialIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { renderAnimationBackground } from "@/utils/templateAnimations";
@@ -38,6 +39,7 @@ interface Link {
   imageUrl?: string;
   price?: string;
   position: number;
+  socialPosition?: string;
 }
 
 const ProfilePage = () => {
@@ -164,13 +166,21 @@ const ProfilePage = () => {
   // Get unified template styles
   const templateStyles = getTemplateStyles(template, templateConfig);
 
-  // Group links by section and maintain position order within each section
+  // Separate social links from regular links
+  const socialLinks = links ? links.filter(link => link.linkType === "social" || link.section === "social") : [];
+  const regularLinks = links ? links.filter(link => link.linkType !== "social" && link.section !== "social") : [];
+  
+  // Separate social links by position
+  const topSocialLinks = socialLinks.filter(link => link.socialPosition === "top" || link.position === -1);
+  const bottomSocialLinks = socialLinks.filter(link => link.socialPosition === "bottom" || link.position === 999);
+
+  // Group regular links by section and maintain position order within each section
   const groupLinksBySection = () => {
-    if (!links) return {};
+    if (!regularLinks) return {};
 
     const sections: Record<string, Link[]> = {};
 
-    links.forEach(link => {
+    regularLinks.forEach(link => {
       const section = link.section || 'default';
       if (!sections[section]) {
         sections[section] = [];
@@ -178,7 +188,6 @@ const ProfilePage = () => {
       sections[section].push(link);
     });
 
-    // Sort each section by position
     Object.keys(sections).forEach(sectionName => {
       sections[sectionName].sort((a, b) => (a.position || 0) - (b.position || 0));
     });
@@ -271,35 +280,23 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {/* Social Icons (if any) */}
-        {sectionedLinks['social'] && (
-          <div className="flex justify-center flex-wrap my-6">
-            {sectionedLinks['social'].map((link) => (
-              <ProfileLink
-                key={link.id}
-                link={link}
-                themeColor={templateStyles.themeColor}
-                template={template}
-                buttonStyle={templateStyles.buttonStyle}
-                fontFamily={templateStyles.fontFamily}
-                onClick={() => handleLinkClick(link.id)}
-                layout="icons"
-              />
-            ))}
-          </div>
+        {/* Top Social Icons */}
+        {topSocialLinks.length > 0 && (
+          <SocialIcons 
+            links={topSocialLinks} 
+            onClick={handleLinkClick} 
+            themeColor={templateStyles.themeColor}
+          />
         )}
 
         {/* Sections */}
         {Object.entries(sectionedLinks).map(([sectionName, sectionLinks]) => {
-          if (sectionName === 'social') return null; // Already handled above
-
           const layout = getSectionLayout(sectionName);
           const sectionTitle = getSectionTitle(sectionName);
           const isProducts = sectionName === 'products';
 
           return (
             <div key={sectionName} className="mb-8">
-              {/* Section Title */}
               {sectionTitle && (
                 <div className="mb-4">
                   <h2 className="text-lg font-bold">{sectionTitle}</h2>
@@ -309,7 +306,6 @@ const ProfilePage = () => {
                 </div>
               )}
 
-              {/* Section Links */}
               {layout === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {sectionLinks.map((link, index) => (
@@ -346,6 +342,15 @@ const ProfilePage = () => {
             </div>
           );
         })}
+
+        {/* Bottom Social Icons */}
+        {bottomSocialLinks.length > 0 && (
+          <SocialIcons 
+            links={bottomSocialLinks} 
+            onClick={handleLinkClick} 
+            themeColor={templateStyles.themeColor}
+          />
+        )}
 
         {/* Show loading or no links message if needed */}
         {linksLoading ? (

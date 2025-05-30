@@ -1,6 +1,8 @@
+
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
+import { SocialIcons } from "@/components/SocialIcons";
 import { renderAnimationBackground } from "@/utils/templateAnimations";
 import { templatesLibrary } from "@/constants/templates";
 import { useUserTemplate } from "@/hooks/useUserTemplate";
@@ -26,6 +28,8 @@ interface LivePreviewProps {
     linkType?: string;
     clicks?: number;
     position?: number;
+    section?: string;
+    socialPosition?: string;
   }>;
   template: string;
   themeColor: string;
@@ -50,10 +54,8 @@ export const LivePreview = ({
   // Get user template data if profile has an id
   const { userTemplate } = useUserTemplate(profile.id);
   
-  // Get template configuration from library
   const templateConfig = templatesLibrary.find(t => t.id === template);
 
-  // Use user template data if available, otherwise use props or template config
   const effectiveTemplate = {
     name: template,
     buttonStyle: userTemplate?.button_style || buttonStyle || templateConfig?.buttonStyle || 'default',
@@ -70,12 +72,19 @@ export const LivePreview = ({
     animationType: userTemplate?.animation_type || templateConfig?.animationType
   };
 
-  // Get unified template styles
   const styles = getTemplateStyles(template, effectiveTemplate);
   
+  // Separate social links from regular links
+  const socialLinks = links ? links.filter(link => link.linkType === "social" || link.section === "social") : [];
+  const regularLinks = links ? links.filter(link => link.linkType !== "social" && link.section !== "social") : [];
+  
+  // Separate social links by position
+  const topSocialLinks = socialLinks.filter(link => link.socialPosition === "top" || link.position === -1);
+  const bottomSocialLinks = socialLinks.filter(link => link.socialPosition === "bottom" || link.position === 999);
+  
   // Sort links by position before displaying
-  const sortedLinks = links && links.length > 0 
-    ? [...links].sort((a, b) => (a.position || 0) - (b.position || 0))
+  const sortedRegularLinks = regularLinks && regularLinks.length > 0 
+    ? [...regularLinks].sort((a, b) => (a.position || 0) - (b.position || 0))
     : [
         { id: '1', title: 'Sample Link 1', url: 'https://example.com', icon: 'globe', position: 0 },
         { id: '2', title: 'Sample Link 2', url: 'https://example.com', icon: 'link', position: 1 }
@@ -106,11 +115,7 @@ export const LivePreview = ({
   };
   
   const fontClass = fontClassMap[effectiveTemplate.fontFamily] || "font-sans";
-
-  // Determine the effective theme color
   const effectiveThemeColor = effectiveTemplate.customColor || effectiveTemplate.themeColor;
-
-  // Get text color based on template
   const textColorClass = getTextColor(template, effectiveTemplate);
 
   return (
@@ -118,7 +123,6 @@ export const LivePreview = ({
       className={`rounded-md overflow-hidden h-[600px] relative ${styles.background}`}
       style={getBackgroundStyle(template, effectiveTemplate)}
     >
-      {/* Render animated background if needed */}
       {effectiveTemplate.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: effectiveTemplate.animationType })}
       
       <ScrollArea className="h-[600px]">
@@ -145,8 +149,18 @@ export const LivePreview = ({
             </div>
           )}
 
+          {/* Top Social Icons */}
+          {topSocialLinks.length > 0 && (
+            <SocialIcons 
+              links={topSocialLinks} 
+              onClick={() => {}} 
+              themeColor={effectiveThemeColor}
+            />
+          )}
+
+          {/* Regular Links */}
           <div className={styles.links}>
-            {sortedLinks.map((link) => (
+            {sortedRegularLinks.map((link) => (
               <ProfileLink 
                 key={link.id} 
                 link={link} 
@@ -160,6 +174,15 @@ export const LivePreview = ({
               />
             ))}
           </div>
+
+          {/* Bottom Social Icons */}
+          {bottomSocialLinks.length > 0 && (
+            <SocialIcons 
+              links={bottomSocialLinks} 
+              onClick={() => {}} 
+              themeColor={effectiveThemeColor}
+            />
+          )}
         </div>
       </ScrollArea>
     </div>
