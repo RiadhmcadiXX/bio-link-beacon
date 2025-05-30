@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -114,15 +113,16 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Create submission data with proper database field names
+    const submissionData = {
+      ...formData,
+      link_type: activeTab === "embed" ? "embed" : formData.linkType
+    };
+    
     // Make sure to set isEmbed correctly for embed type links
-    let submissionData = { ...formData };
     if (activeTab === "embed") {
       submissionData.isEmbed = true;
-      submissionData.linkType = "embed";
     }
-    
-    // Set link_type for consistency with database
-    submissionData.link_type = submissionData.linkType;
     
     onSave(submissionData);
   };
