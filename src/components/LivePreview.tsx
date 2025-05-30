@@ -115,7 +115,7 @@ export const LivePreview = ({
 
   return (
     <div 
-      className={`rounded-md overflow-hidden h-full relative ${styles.background}`}
+      className={`rounded-md overflow-hidden h-[600px] relative ${styles.background}`}
       style={getBackgroundStyle(template, effectiveTemplate)}
     >
       {/* Render animated background if needed */}
