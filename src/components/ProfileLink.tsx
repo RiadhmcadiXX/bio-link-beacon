@@ -90,63 +90,106 @@ export const ProfileLink = ({
     }
   };
 
-  // Get theme-based styles
-  const getThemeStyles = () => {
+  // Get template-based styles that match LivePreview exactly
+  const getTemplateStyles = () => {
+    switch (template) {
+      case 'minimal':
+        return {
+          containerClass: 'bg-white shadow-sm border hover:shadow transition-shadow rounded-lg p-4',
+          textColor: 'text-gray-800'
+        };
+      case 'elegant-dark':
+        return {
+          containerClass: 'bg-gray-800 text-white hover:bg-gray-700 rounded-lg p-4',
+          textColor: 'text-white'
+        };
+      case 'gradient':
+        return {
+          containerClass: 'bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 text-white rounded-lg p-4',
+          textColor: 'text-white'
+        };
+      case 'bubbles':
+        return {
+          containerClass: 'bg-white rounded-full shadow-md hover:shadow-lg p-4',
+          textColor: 'text-gray-800'
+        };
+      case 'modern':
+        return {
+          containerClass: 'bg-white shadow rounded-md hover:shadow-md border-l-4 border-gray-300 p-4',
+          textColor: 'text-gray-800'
+        };
+      case 'floating-particles':
+      case 'wave-background':
+      case 'gradient-flow':
+      case 'blue-flow':
+        return {
+          containerClass: 'bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 rounded-lg p-4',
+          textColor: 'text-white'
+        };
+      case 'custom':
+        return getCustomTemplateStyles();
+      default:
+        return {
+          containerClass: 'bg-white/10 hover:bg-white/20 rounded-lg p-4',
+          textColor: 'text-gray-800'
+        };
+    }
+  };
+
+  // Get custom template styles based on theme
+  const getCustomTemplateStyles = () => {
+    if (buttonStyle === 'gradient' && gradientFrom && gradientTo) {
+      return {
+        containerClass: 'text-white rounded-lg p-4',
+        textColor: 'text-white'
+      };
+    }
+
     // Check if themeColor is a hex color
     if (themeColor?.startsWith('#')) {
-      return { 
-        bg: 'bg-white/10 hover:bg-white/20', 
-        text: 'text-gray-800' 
+      return {
+        containerClass: 'text-white rounded-lg p-4',
+        textColor: 'text-white'
       };
     }
 
     switch (themeColor) {
       case 'blue':
-        return { bg: 'bg-brand-blue/10 hover:bg-brand-blue/20', text: 'text-brand-blue' };
+        return {
+          containerClass: 'bg-brand-blue/10 hover:bg-brand-blue/20 rounded-lg p-4',
+          textColor: 'text-brand-blue'
+        };
       case 'pink':
-        return { bg: 'bg-brand-pink/10 hover:bg-brand-pink/20', text: 'text-brand-pink' };
+        return {
+          containerClass: 'bg-brand-pink/10 hover:bg-brand-pink/20 rounded-lg p-4',
+          textColor: 'text-brand-pink'
+        };
       case 'orange':
-        return { bg: 'bg-brand-orange/10 hover:bg-brand-orange/20', text: 'text-brand-orange' };
+        return {
+          containerClass: 'bg-brand-orange/10 hover:bg-brand-orange/20 rounded-lg p-4',
+          textColor: 'text-brand-orange'
+        };
       default: // purple
-        return { bg: 'bg-brand-purple/10 hover:bg-brand-purple/20', text: 'text-brand-purple' };
+        return {
+          containerClass: 'bg-brand-purple/10 hover:bg-brand-purple/20 rounded-lg p-4',
+          textColor: 'text-brand-purple'
+        };
     }
   };
 
-  // Get special styles for social and product links
-  const getLinkTypeStyles = () => {
-    if (link.linkType === 'social') {
-      return 'border-l-4 border-blue-400';
-    } else if (link.linkType === 'product') {
-      return 'border-l-4 border-green-400';
-    } else if (link.linkType === 'embed') {
-      return 'border-l-4 border-purple-400';
-    }
-    return '';
-  };
-
-  // Get button style classes
-  const getButtonStyleClasses = () => {
+  // Get button style classes that override template styles when needed
+  const getButtonStyleOverrides = () => {
     switch (buttonStyle) {
       case 'rounded':
-        return "rounded-full bg-white";
+        return "rounded-full";
       case 'outline':
         return "bg-transparent border-2 border-current";
-      case 'gradient':
-        if (gradientFrom && gradientTo) {
-          return "text-white"; // Custom gradient handled via inline style
-        }
-        return `bg-gradient-to-r ${
-          themeColor === 'purple' ? 'from-purple-500 to-pink-500' :
-          themeColor === 'blue' ? 'from-blue-500 to-cyan-400' :
-          themeColor === 'pink' ? 'from-pink-500 to-red-400' :
-          'from-orange-500 to-amber-400'
-        } text-white`;
       case 'minimal':
-        return "bg-transparent hover:underline shadow-none p-2";
+        return "bg-transparent hover:underline shadow-none";
       case 'shadow':
-        return "bg-white shadow-md hover:shadow-lg";
+        return "shadow-md hover:shadow-lg";
       default:
-        return ""; // Default style is already in the main classes
+        return "";
     }
   };
 
@@ -196,30 +239,6 @@ export const ProfileLink = ({
     }
   };
 
-  // Get template-specific styles
-  const getTemplateStyles = () => {
-    switch (template) {
-      case 'minimal':
-        return "bg-white shadow-sm border hover:shadow transition-shadow";
-      case 'elegant-dark':
-        return "bg-gray-800 text-white hover:bg-gray-700";
-      case 'gradient':
-        return "bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 text-white";
-      case 'bubbles':
-        return "bg-white rounded-full shadow-md hover:shadow-lg";
-      case 'modern':
-        return "bg-white shadow rounded-md hover:shadow-md border-l-4 border-gray-300";
-      case 'custom':
-        return getButtonStyleClasses(); // For custom template, prioritize button styles
-      default:
-        return ""; // Default style is already in the main classes
-    }
-  };
-
-  const themeStyles = getThemeStyles();
-  const templateSpecificStyles = getTemplateStyles();
-  const fontFamilyClasses = getFontFamilyClasses();
-
   // Get gradient style for the button if using gradient
   const getGradientStyle = () => {
     if (buttonStyle === 'gradient' && gradientFrom && gradientTo) {
@@ -252,18 +271,19 @@ export const ProfileLink = ({
 
   // Render social icon for horizontal icons list
   if (link.linkType === 'social' && layout === 'icons') {
+    const styles = getTemplateStyles();
     return (
       <a 
         href={link.url} 
         target="_blank" 
         rel="noopener noreferrer"
-        className={`inline-flex items-center justify-center p-3 rounded-full ${themeStyles.bg} ${fontFamilyClasses} transition-all duration-200 transform hover:scale-110 mx-1`}
+        className={`inline-flex items-center justify-center p-3 rounded-full bg-white/10 hover:bg-white/20 ${getFontFamilyClasses()} transition-all duration-200 transform hover:scale-110 mx-1`}
         onClick={(e) => {
           onClick();
         }}
         style={getGradientStyle()}
       >
-        <div className={`${themeStyles.text}`}>{renderIcon()}</div>
+        <div className={styles.textColor}>{renderIcon()}</div>
       </a>
     );
   }
@@ -312,23 +332,26 @@ export const ProfileLink = ({
   }
 
   // Default list style for all other links
+  const styles = getTemplateStyles();
+  const buttonOverrides = getButtonStyleOverrides();
+  const fontClasses = getFontFamilyClasses();
+
   return (
     <a 
       href={link.url} 
       target="_blank" 
       rel="noopener noreferrer" 
-      className={`block ${themeStyles.bg} ${getLinkTypeStyles()} ${templateSpecificStyles} ${fontFamilyClasses} rounded-lg p-4 transition-all duration-200 transform hover:scale-[1.01]`}
+      className={`block ${styles.containerClass} ${buttonOverrides} ${fontClasses} transition-all duration-200 transform hover:scale-[1.01]`}
       onClick={(e) => {
         onClick();
-        // Let the default navigation happen
       }}
       style={getGradientStyle()}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className={`mr-3 ${themeStyles.text}`}>{renderIcon()}</div>
+          <div className={`mr-3 ${styles.textColor}`}>{renderIcon()}</div>
           <div>
-            <span className="font-medium">{link.title}</span>
+            <span className={`font-medium ${styles.textColor}`}>{link.title}</span>
             {link.description && isProduct && (
               <p className="text-sm text-gray-500 mt-1">{link.description}</p>
             )}
@@ -338,7 +361,7 @@ export const ProfileLink = ({
           {link.price && isProduct && (
             <span className="mr-3 font-medium text-green-600">{link.price}</span>
           )}
-          <ExternalLink className="h-4 w-4 text-gray-400" />
+          <ExternalLink className={`h-4 w-4 ${styles.textColor === 'text-white' ? 'text-white/70' : 'text-gray-400'}`} />
         </div>
       </div>
     </a>
