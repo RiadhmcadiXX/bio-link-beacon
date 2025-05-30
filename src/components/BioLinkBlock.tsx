@@ -8,6 +8,7 @@ import { ShareBioLinkDialog } from './ShareBioLinkDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProfileLink } from '@/components/ProfileLink';
 
 export const BioLinkBlock = () => {
   const { user } = useAuthContext();
@@ -30,11 +31,41 @@ export const BioLinkBlock = () => {
     },
     enabled: !!user,
   });
+
+  // Fetch links data ordered by position
+  const { data: links } = useQuery({
+    queryKey: ['links', user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('links')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
   
   // Extract username from user metadata or use email as fallback
   const username = user?.username || profileData?.username;
   
   const profileUrl = `/${username}`;
+
+  const handleLinkClick = async (linkId: string, url: string) => {
+    // Increment click count
+    try {
+      await supabase.rpc('increment_link_click', { link_id: linkId });
+    } catch (error) {
+      console.error('Failed to increment click count:', error);
+    }
+    
+    // Open the link
+    window.open(url, '_blank');
+  };
   
   return (
     <div className="w-full bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 p-4 border-b">
@@ -59,6 +90,26 @@ export const BioLinkBlock = () => {
             )}
           </div>
         </div>
+
+        {/* Links Section - ordered by position */}
+        {links && links.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Your Links:</h3>
+            <div className="space-y-2">
+              {links.map((link) => (
+                <ProfileLink
+                  key={link.id}
+                  link={link}
+                  themeColor={profileData?.theme || 'purple'}
+                  onClick={() => handleLinkClick(link.id, link.url)}
+                  template={profileData?.template || 'default'}
+                  buttonStyle={profileData?.button_style || 'default'}
+                  fontFamily={profileData?.font_family || 'default'}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* URL and Actions Section */}
         <div className="flex justify-between items-center">
