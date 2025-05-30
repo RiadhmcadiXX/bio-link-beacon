@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileLink } from "@/components/ProfileLink";
@@ -25,6 +24,7 @@ interface LivePreviewProps {
     icon: string;
     linkType?: string;
     clicks?: number;
+    position?: number;
   }>;
   template: string;
   themeColor: string;
@@ -72,11 +72,13 @@ export const LivePreview = ({
   // Get unified template styles
   const styles = getTemplateStyles(template, effectiveTemplate);
   
-  // Add some sample links if none are provided
-  const sampleLinks = links && links.length > 0 ? links : [
-    { id: '1', title: 'Sample Link 1', url: 'https://example.com', icon: 'globe' },
-    { id: '2', title: 'Sample Link 2', url: 'https://example.com', icon: 'link' }
-  ];
+  // Sort links by position before displaying
+  const sortedLinks = links && links.length > 0 
+    ? [...links].sort((a, b) => (a.position || 0) - (b.position || 0))
+    : [
+        { id: '1', title: 'Sample Link 1', url: 'https://example.com', icon: 'globe', position: 0 },
+        { id: '2', title: 'Sample Link 2', url: 'https://example.com', icon: 'link', position: 1 }
+      ];
 
   // Font class mapping
   const fontClassMap: Record<string, string> = {
@@ -142,7 +144,7 @@ export const LivePreview = ({
         )}
 
         <div className={styles.links}>
-          {sampleLinks.map((link) => (
+          {sortedLinks.map((link) => (
             <ProfileLink 
               key={link.id} 
               link={link} 

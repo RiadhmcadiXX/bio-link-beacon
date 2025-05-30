@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +37,7 @@ interface Link {
   description?: string;
   imageUrl?: string;
   price?: string;
+  position: number;
 }
 
 const ProfilePage = () => {
@@ -65,7 +65,7 @@ const ProfilePage = () => {
   // Get user template data
   const { userTemplate } = useUserTemplate(profile?.id);
 
-  // Fetch links data
+  // Fetch links data with position and sort by position
   const {
     data: links,
     isLoading: linksLoading,
@@ -79,7 +79,7 @@ const ProfilePage = () => {
         .from("links")
         .select("*")
         .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
+        .order("position", { ascending: true });
 
       if (error) throw error;
       return data as Link[];
@@ -164,7 +164,7 @@ const ProfilePage = () => {
   // Get unified template styles
   const templateStyles = getTemplateStyles(template, templateConfig);
 
-  // Group links by section
+  // Group links by section and maintain position order within each section
   const groupLinksBySection = () => {
     if (!links) return {};
 
@@ -176,6 +176,11 @@ const ProfilePage = () => {
         sections[section] = [];
       }
       sections[section].push(link);
+    });
+
+    // Sort each section by position
+    Object.keys(sections).forEach(sectionName => {
+      sections[sectionName].sort((a, b) => (a.position || 0) - (b.position || 0));
     });
 
     return sections;

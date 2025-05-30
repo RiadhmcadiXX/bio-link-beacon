@@ -1,4 +1,3 @@
-
 import React from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
@@ -32,6 +31,7 @@ interface ProfileLinkProps {
     price?: string;
     isEmbed?: boolean;
     embedType?: string;
+    position?: number;
   };
   themeColor: string;
   onClick: () => void;
