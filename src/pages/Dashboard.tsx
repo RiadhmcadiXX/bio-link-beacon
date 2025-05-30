@@ -8,9 +8,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Link as LinkIcon, LayoutTemplate, Palette, Settings, BarChart2, Image } from "lucide-react";
+import { Plus, Link as LinkIcon, LayoutTemplate, Palette, Settings, BarChart2, Image, Users } from "lucide-react";
 import { LinkItem } from "@/components/LinkItem";
 import { EditLinkDialog } from "@/components/EditLinkDialog";
+import { AddSocialLinkDialog } from "@/components/AddSocialLinkDialog";
 import { TemplateCard } from "@/components/TemplateCard";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { PresetTemplatesTab } from "@/components/templates/PresetTemplatesTab";
@@ -66,6 +67,7 @@ const Dashboard = () => {
   const { user } = useAuthContext();
   const { role } = useUserRole();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSocialDialogOpen, setIsSocialDialogOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<Link | null>(null);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("links");
@@ -264,6 +266,14 @@ const Dashboard = () => {
   const handleOpenNewLinkDialog = () => {
     setEditingLink(null);
     setIsDialogOpen(true);
+  };
+
+  const handleOpenSocialLinkDialog = () => {
+    setIsSocialDialogOpen(true);
+  };
+
+  const handleSaveSocialLink = (socialLink: any) => {
+    saveLink.mutate(socialLink);
   };
 
   const handleEditLink = (link: Link) => {
@@ -533,9 +543,14 @@ const Dashboard = () => {
                 </TabsList>
 
                 {activeTab === 'links' && (
-                  <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
-                    <Plus className="h-4 w-4 mr-2" /> Add Link
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleOpenSocialLinkDialog} variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-purple/10">
+                      <Users className="h-4 w-4 mr-2" /> Add Social
+                    </Button>
+                    <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                      <Plus className="h-4 w-4 mr-2" /> Add Link
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -591,9 +606,14 @@ const Dashboard = () => {
                 ) : (
                   <Card className="p-6 text-center">
                     <p className="mb-4">You don't have any links yet.</p>
-                    <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
-                      <Plus className="h-4 w-4 mr-2" /> Add your first link
-                    </Button>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={handleOpenSocialLinkDialog} variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-purple/10">
+                        <Users className="h-4 w-4 mr-2" /> Add Social Link
+                      </Button>
+                      <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                        <Plus className="h-4 w-4 mr-2" /> Add your first link
+                      </Button>
+                    </div>
                   </Card>
                 )}
               </TabsContent>
@@ -744,6 +764,12 @@ const Dashboard = () => {
         onClose={() => setIsDialogOpen(false)}
         link={editingLink}
         onSave={handleSaveLink}
+      />
+
+      <AddSocialLinkDialog
+        isOpen={isSocialDialogOpen}
+        onClose={() => setIsSocialDialogOpen(false)}
+        onSave={handleSaveSocialLink}
       />
     </Layout>
   );
