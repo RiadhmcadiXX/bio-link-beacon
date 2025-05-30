@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ExternalLink, Share2 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -57,7 +58,7 @@ export const BioLinkBlock = () => {
   const handleLinkClick = async (linkId: string, url: string) => {
     // Increment click count
     try {
-      await supabase.rpc('increment_link_click', { link_id: linkId as any });
+      await supabase.rpc('increment_link_click', { link_id: linkId });
     } catch (error) {
       console.error('Failed to increment click count:', error);
     }
