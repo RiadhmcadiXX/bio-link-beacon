@@ -25,11 +25,10 @@ interface LivePreviewProps {
     title: string;
     url: string;
     icon: string;
-    linkType?: string;
+    link_type?: string;
     clicks?: number;
     position?: number;
-    section?: string;
-    socialPosition?: string;
+    social_position?: string;
   }>;
   template: string;
   themeColor: string;
@@ -75,14 +74,14 @@ export const LivePreview = ({
   const styles = getTemplateStyles(template, effectiveTemplate);
   
   // Separate social links from regular links
-  const socialLinks = links ? links.filter(link => link.linkType === "social" || link.section === "social") : [];
-  const regularLinks = links ? links.filter(link => link.linkType !== "social" && link.section !== "social") : [];
+  const socialLinks = links ? links.filter(link => link.link_type === "social") : [];
+  const regularLinks = links ? links.filter(link => link.link_type !== "social") : [];
   
   // Separate social links by position
-  const topSocialLinks = socialLinks.filter(link => link.socialPosition === "top" || link.position === -1);
-  const bottomSocialLinks = socialLinks.filter(link => link.socialPosition === "bottom" || link.position === 999);
+  const topSocialLinks = socialLinks.filter(link => link.social_position === "top" || link.position === -1);
+  const bottomSocialLinks = socialLinks.filter(link => link.social_position === "bottom" || link.position === 999);
   
-  // Sort links by position before displaying
+  // Sort links by position before displaying, fallback to sample data for regular links
   const sortedRegularLinks = regularLinks && regularLinks.length > 0 
     ? [...regularLinks].sort((a, b) => (a.position || 0) - (b.position || 0))
     : [

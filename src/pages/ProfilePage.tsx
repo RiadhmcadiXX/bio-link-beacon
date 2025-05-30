@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,14 +33,14 @@ interface Link {
   title: string;
   url: string;
   icon: string;
-  linkType?: string;
+  link_type?: string;
   clicks: number;
   section?: string;
   description?: string;
   imageUrl?: string;
   price?: string;
   position: number;
-  socialPosition?: string;
+  social_position?: string;
 }
 
 const ProfilePage = () => {
@@ -166,13 +167,13 @@ const ProfilePage = () => {
   // Get unified template styles
   const templateStyles = getTemplateStyles(template, templateConfig);
 
-  // Separate social links from regular links
-  const socialLinks = links ? links.filter(link => link.linkType === "social" || link.section === "social") : [];
-  const regularLinks = links ? links.filter(link => link.linkType !== "social" && link.section !== "social") : [];
+  // Separate social links from regular links based on link_type
+  const socialLinks = links ? links.filter(link => link.link_type === "social") : [];
+  const regularLinks = links ? links.filter(link => link.link_type !== "social") : [];
   
   // Separate social links by position
-  const topSocialLinks = socialLinks.filter(link => link.socialPosition === "top" || link.position === -1);
-  const bottomSocialLinks = socialLinks.filter(link => link.socialPosition === "bottom" || link.position === 999);
+  const topSocialLinks = socialLinks.filter(link => link.social_position === "top" || link.position === -1);
+  const bottomSocialLinks = socialLinks.filter(link => link.social_position === "bottom" || link.position === 999);
 
   // Group regular links by section and maintain position order within each section
   const groupLinksBySection = () => {

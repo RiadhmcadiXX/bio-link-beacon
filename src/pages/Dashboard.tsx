@@ -30,9 +30,10 @@ interface Link {
   title: string;
   url: string;
   icon: string;
-  linkType?: string;
+  link_type?: string;
   clicks: number;
   position: number;
+  social_position?: string;
 }
 
 interface Template {
@@ -124,6 +125,8 @@ const Dashboard = () => {
             title: link.title,
             url: link.url,
             icon: link.icon,
+            link_type: link.link_type,
+            social_position: link.social_position,
           })
           .eq('id', link.id)
           .eq('user_id', user.id);
@@ -133,9 +136,12 @@ const Dashboard = () => {
         // Add new link - get the highest position value and add 1
         let newPosition = 0;
         if (links && links.length > 0) {
-          // Find the highest position
-          const maxPosition = Math.max(...links.map(l => l.position || 0));
-          newPosition = maxPosition + 1;
+          // Find the highest position for the same link type
+          const sameTypeLinks = links.filter(l => l.link_type === (link.link_type || 'link'));
+          if (sameTypeLinks.length > 0) {
+            const maxPosition = Math.max(...sameTypeLinks.map(l => l.position || 0));
+            newPosition = maxPosition + 1;
+          }
         }
 
         // Add new link
@@ -145,6 +151,8 @@ const Dashboard = () => {
             title: link.title,
             url: link.url,
             icon: link.icon || 'link',
+            link_type: link.link_type || 'link',
+            social_position: link.social_position || 'bottom',
             user_id: user.id,
             position: newPosition,
           });
@@ -154,6 +162,7 @@ const Dashboard = () => {
     },
     onSuccess: () => {
       setIsDialogOpen(false);
+      setIsSocialDialogOpen(false);
       toast.success(editingLink?.id ? "Link updated successfully!" : "Link added successfully!");
     },
     onError: (error) => {
@@ -469,6 +478,10 @@ const Dashboard = () => {
     updateLinksOrder.mutate({ links: updatedLinks });
   };
 
+  // Filter links by type
+  const regularLinks = links ? links.filter(link => link.link_type !== 'social') : [];
+  const socialLinks = links ? links.filter(link => link.link_type === 'social') : [];
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
@@ -554,68 +567,111 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* My Links Tab - Updated with drag and drop */}
-              <TabsContent value="links" className="space-y-4">
-                <h1 className="text-2xl font-bold">My Links</h1>
+              {/* My Links Tab - Updated to show different sections */}
+              <TabsContent value="links" className="space-y-6">
+                <div>
+                  <h1 className="text-2xl font-bold mb-4">My Links</h1>
 
-                {linksLoading ? (
-                  <div className="text-center py-6">Loading links...</div>
-                ) : linksError ? (
-                  <Card className="p-6 text-center">
-                    <p className="text-red-500">Error loading links</p>
-                    <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['links', user?.id] })} className="mt-2">
-                      Retry
-                    </Button>
-                  </Card>
-                ) : links && links.length > 0 ? (
-                  <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="links-list">
-                      {(provided) => (
-                        <div 
-                          className="space-y-3"
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                        >
-                          {links.map((link, index) => (
-                            <Draggable 
-                              key={link.id} 
-                              draggableId={link.id} 
-                              index={index}
-                            >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                >
-                                  <LinkItem
-                                    link={link}
-                                    onEdit={() => handleEditLink(link)}
-                                    onDelete={() => handleDeleteLink(link.id)}
-                                    isDragging={snapshot.isDragging}
-                                    dragHandleProps={provided.dragHandleProps}
-                                  />
-                                </div>
-                              )}
-                            </Draggable>
+                  {/* Social Links Section */}
+                  {socialLinks && socialLinks.length > 0 && (
+                    <div className="mb-8">
+                      <h2 className="text-lg font-semibold mb-4">Social Links</h2>
+                      <p className="text-sm text-gray-600 mb-4">These links will appear as icons on your profile page</p>
+                      
+                      {linksLoading ? (
+                        <div className="text-center py-6">Loading social links...</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {socialLinks.map((link) => (
+                            <LinkItem
+                              key={link.id}
+                              link={link}
+                              onEdit={() => handleEditLink(link)}
+                              onDelete={() => handleDeleteLink(link.id)}
+                              isDragging={false}
+                              dragHandleProps={{}}
+                            />
                           ))}
-                          {provided.placeholder}
                         </div>
                       )}
-                    </Droppable>
-                  </DragDropContext>
-                ) : (
-                  <Card className="p-6 text-center">
-                    <p className="mb-4">You don't have any links yet.</p>
-                    <div className="flex gap-2 justify-center">
-                      <Button onClick={handleOpenSocialLinkDialog} variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-purple/10">
-                        <Users className="h-4 w-4 mr-2" /> Add Social Link
-                      </Button>
-                      <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
-                        <Plus className="h-4 w-4 mr-2" /> Add your first link
-                      </Button>
                     </div>
-                  </Card>
-                )}
+                  )}
+
+                  {/* Regular Links Section */}
+                  <div>
+                    <h2 className="text-lg font-semibold mb-4">Regular Links</h2>
+                    <p className="text-sm text-gray-600 mb-4">These links will appear as buttons on your profile page</p>
+
+                    {linksLoading ? (
+                      <div className="text-center py-6">Loading links...</div>
+                    ) : linksError ? (
+                      <Card className="p-6 text-center">
+                        <p className="text-red-500">Error loading links</p>
+                        <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['links', user?.id] })} className="mt-2">
+                          Retry
+                        </Button>
+                      </Card>
+                    ) : regularLinks && regularLinks.length > 0 ? (
+                      <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable droppableId="links-list">
+                          {(provided) => (
+                            <div 
+                              className="space-y-3"
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                            >
+                              {regularLinks.map((link, index) => (
+                                <Draggable 
+                                  key={link.id} 
+                                  draggableId={link.id} 
+                                  index={index}
+                                >
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                    >
+                                      <LinkItem
+                                        link={link}
+                                        onEdit={() => handleEditLink(link)}
+                                        onDelete={() => handleDeleteLink(link.id)}
+                                        isDragging={snapshot.isDragging}
+                                        dragHandleProps={provided.dragHandleProps}
+                                      />
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    ) : (
+                      <Card className="p-6 text-center">
+                        <p className="mb-4">You don't have any regular links yet.</p>
+                        <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                          <Plus className="h-4 w-4 mr-2" /> Add your first link
+                        </Button>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Show empty state only if no links at all */}
+                  {(!links || links.length === 0) && !linksLoading && (
+                    <Card className="p-6 text-center">
+                      <p className="mb-4">You don't have any links yet.</p>
+                      <div className="flex gap-2 justify-center">
+                        <Button onClick={handleOpenSocialLinkDialog} variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-purple/10">
+                          <Users className="h-4 w-4 mr-2" /> Add Social Link
+                        </Button>
+                        <Button onClick={handleOpenNewLinkDialog} className="bg-brand-purple hover:bg-brand-purple/90">
+                          <Plus className="h-4 w-4 mr-2" /> Add your first link
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
+                </div>
               </TabsContent>
 
               {/* Preset Templates Tab */}

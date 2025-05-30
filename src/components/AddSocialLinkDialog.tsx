@@ -31,7 +31,7 @@ export const AddSocialLinkDialog = ({ isOpen, onClose, onSave }: AddSocialLinkDi
   const [formData, setFormData] = useState({
     platform: "",
     url: "",
-    position: "top" // top or bottom
+    position: "bottom" // top or bottom
   });
 
   const socialPlatforms = [
@@ -71,14 +71,13 @@ export const AddSocialLinkDialog = ({ isOpen, onClose, onSave }: AddSocialLinkDi
       title: selectedPlatform?.label || formData.platform,
       url: fullUrl,
       icon: formData.platform,
-      linkType: "social",
-      section: "social",
+      link_type: "social",
+      social_position: formData.position,
       position: formData.position === "top" ? -1 : 999, // Use -1 for top, 999 for bottom
-      socialPosition: formData.position
     };
 
     onSave(socialLink);
-    setFormData({ platform: "", url: "", position: "top" });
+    setFormData({ platform: "", url: "", position: "bottom" });
     onClose();
   };
 
