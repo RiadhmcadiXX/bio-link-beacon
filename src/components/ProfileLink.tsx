@@ -1,3 +1,4 @@
+
 import React from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
@@ -23,7 +24,7 @@ interface ProfileLinkProps {
     title: string;
     url: string;
     icon: string;
-    linkType?: string;
+    link_type?: string;
     clicks?: number;
     section?: string;
     description?: string;
@@ -32,6 +33,7 @@ interface ProfileLinkProps {
     isEmbed?: boolean;
     embedType?: string;
     position?: number;
+    social_position?: string;
   };
   themeColor: string;
   onClick: () => void;
@@ -74,6 +76,7 @@ export const ProfileLink = ({
       case 'github':
         return <Github className="h-5 w-5" />;
       case 'globe':
+      case 'website':
         return <Globe className="h-5 w-5" />;
       case 'mail':
         return <Mail className="h-5 w-5" />;
@@ -255,6 +258,27 @@ export const ProfileLink = ({
     return {};
   };
 
+  // Get theme styles for social icons
+  const getSocialIconStyles = () => {
+    if (themeColor?.startsWith('#')) {
+      return {
+        backgroundColor: themeColor,
+        color: 'white'
+      };
+    }
+
+    switch (themeColor) {
+      case 'blue':
+        return 'bg-brand-blue text-white hover:bg-brand-blue/80';
+      case 'pink':
+        return 'bg-brand-pink text-white hover:bg-brand-pink/80';
+      case 'orange':
+        return 'bg-brand-orange text-white hover:bg-brand-orange/80';
+      default: // purple
+        return 'bg-brand-purple text-white hover:bg-brand-purple/80';
+    }
+  };
+
   // If this is an embed link, render the embedded content
   if (link.isEmbed) {
     return (
@@ -269,21 +293,27 @@ export const ProfileLink = ({
     );
   }
 
-  // Render social icon for horizontal icons list
-  if (link.linkType === 'social' && layout === 'icons') {
-    const styles = getTemplateStyles();
+  // Render social icon for social links
+  if (link.link_type === 'social') {
+    const isCustomColor = themeColor?.startsWith('#');
+    const themeClasses = getSocialIconStyles();
+    const customStyles = isCustomColor ? getSocialIconStyles() : undefined;
+
     return (
       <a 
         href={link.url} 
         target="_blank" 
         rel="noopener noreferrer"
-        className={`inline-flex items-center justify-center p-3 rounded-full bg-white/10 hover:bg-white/20 ${getFontFamilyClasses()} transition-all duration-200 transform hover:scale-110 mx-1`}
+        className={`inline-flex items-center justify-center p-3 rounded-full transition-all duration-200 transform hover:scale-110 mx-1 ${
+          isCustomColor ? '' : themeClasses
+        } ${getFontFamilyClasses()}`}
+        style={typeof customStyles === 'object' ? customStyles : undefined}
         onClick={(e) => {
           onClick();
         }}
-        style={getGradientStyle()}
+        title={link.title}
       >
-        <div className={styles.textColor}>{renderIcon()}</div>
+        {renderIcon()}
       </a>
     );
   }
@@ -331,7 +361,7 @@ export const ProfileLink = ({
     );
   }
 
-  // Default list style for all other links
+  // Default list style for regular links
   const styles = getTemplateStyles();
   const buttonOverrides = getButtonStyleOverrides();
   const fontClasses = getFontFamilyClasses();
