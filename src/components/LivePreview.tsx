@@ -120,7 +120,7 @@ export const LivePreview = ({
       {/* Render animated background if needed */}
       {effectiveTemplate.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: effectiveTemplate.animationType })}
       
-      <div className={`${styles.container} ${fontClass} ${textColorClass}`}>
+      <div className={`${styles.container} ${fontClass} ${textColorClass} overflow-y-auto max-h-[90vh] px-4 py-6`}>
         {template === 'modern' ? (
           <div className={styles.header}>
             <Avatar className={styles.avatar}>

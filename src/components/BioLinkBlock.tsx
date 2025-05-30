@@ -37,10 +37,10 @@ export const BioLinkBlock = () => {
   const profileUrl = `/${username}`;
   
   return (
-    <div className="w-full bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 p-4 border-b">
+    <div className="w-full bg-gradient-to-r from-brand-purple/10 to-brand-blue/10 p-2 border-b">
       <div className="container mx-auto">
         {/* Profile Info Section */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">
             <AvatarImage 
               src={profileData?.avatar_url || undefined} 
@@ -54,9 +54,7 @@ export const BioLinkBlock = () => {
             <h2 className="font-semibold text-lg">
               {profileData?.display_name || profileData?.username || 'Your Profile'}
             </h2>
-            {profileData?.bio && (
-              <p className="text-sm text-gray-600 mt-1">{profileData.bio}</p>
-            )}
+            
           </div>
         </div>
 

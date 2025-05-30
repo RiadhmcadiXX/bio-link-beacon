@@ -470,12 +470,12 @@ const Dashboard = () => {
         )}
         
         {/* Main content with live preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 ">
           {/* Live Preview - Left Side */}
-          <div className="lg:col-span-4 xl:col-span-3">
+          <div className="lg:col-span-4 xl:col-span-3 ">
             <Card className="p-4 sticky top-6">
               <h2 className="text-lg font-semibold mb-4">Live Preview</h2>
-              <div className="aspect-[9/16] bg-gray-50 rounded-lg overflow-hidden">
+              <div className="aspect-[9/16] bg-gray-50  rounded-lg ">
                 {profileData ? (
                   <LivePreview
                     profile={{
