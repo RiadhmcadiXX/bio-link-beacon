@@ -13,10 +13,13 @@ export type Database = {
         Row: {
           clicks: number | null
           created_at: string
+          description: string | null
           icon: string | null
           id: string
+          imageurl: string | null
           link_type: string | null
           position: number | null
+          price: string | null
           social_position: string | null
           title: string
           url: string
@@ -25,10 +28,13 @@ export type Database = {
         Insert: {
           clicks?: number | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id?: string
+          imageurl?: string | null
           link_type?: string | null
           position?: number | null
+          price?: string | null
           social_position?: string | null
           title: string
           url: string
@@ -37,10 +43,13 @@ export type Database = {
         Update: {
           clicks?: number | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id?: string
+          imageurl?: string | null
           link_type?: string | null
           position?: number | null
+          price?: string | null
           social_position?: string | null
           title?: string
           url?: string

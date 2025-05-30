@@ -27,10 +27,13 @@ interface LinkItemProps {
     title: string;
     url: string;
     icon: string;
-    linkType?: string;
+    link_type?: string;
     clicks: number;
     isEmbed?: boolean;
     embedType?: string;
+    description?: string;
+    imageUrl?: string;
+    price?: string;
   };
   onEdit: () => void;
   onDelete: () => void;
@@ -79,7 +82,7 @@ export const LinkItem = ({
 
   // Function to get background color based on link type
   const getLinkTypeStyles = () => {
-    switch (link.linkType) {
+    switch (link.link_type) {
       case 'social':
         return 'bg-blue-50';
       case 'product':
@@ -121,6 +124,12 @@ export const LinkItem = ({
             >
               {link.url}
             </a>
+            {link.link_type === 'product' && (
+              <div className="text-xs text-gray-600 mt-1">
+                {link.price && <span className="text-green-600 font-medium mr-2">{link.price}</span>}
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">Product</span>
+              </div>
+            )}
             {link.isEmbed && (
               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded mt-1 inline-block">
                 {link.embedType === "collapsible" ? "Collapsible Embed" : "Video Embed"}

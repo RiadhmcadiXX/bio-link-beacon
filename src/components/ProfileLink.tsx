@@ -1,4 +1,3 @@
-
 import React from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
@@ -314,6 +313,49 @@ export const ProfileLink = ({
         title={link.title}
       >
         {renderIcon()}
+      </a>
+    );
+  }
+
+  // Render product card for product links
+  if (link.link_type === 'product') {
+    return (
+      <a 
+        href={link.url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className={`block rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.01] bg-white ${cardIndex !== undefined && cardIndex % 2 === 0 ? 'md:mr-2' : 'md:ml-2'}`}
+        onClick={(e) => {
+          onClick();
+        }}
+      >
+        <div className="relative w-full h-48 bg-gray-200">
+          {link.imageUrl ? (
+            <img 
+              src={link.imageUrl} 
+              alt={link.title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <Package className="h-12 w-12 text-gray-400" />
+            </div>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-lg text-gray-800">{link.title}</h3>
+            {link.price && <span className="text-green-600 font-medium">{link.price}</span>}
+          </div>
+          {link.description && (
+            <p className="text-gray-600 text-sm mt-2 line-clamp-2">{link.description}</p>
+          )}
+          <div className="flex justify-end mt-3">
+            <span className="text-sm text-blue-500 flex items-center">
+              View details <ExternalLink className="h-3 w-3 ml-1" />
+            </span>
+          </div>
+        </div>
       </a>
     );
   }
