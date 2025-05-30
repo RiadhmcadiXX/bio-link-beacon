@@ -45,14 +45,7 @@ export const SocialIcons = ({ links, onClick, themeColor }: SocialIconsProps) =>
     }
   };
 
-  const getThemeStyles = () => {
-    if (themeColor?.startsWith('#')) {
-      return {
-        backgroundColor: themeColor,
-        color: 'white'
-      };
-    }
-
+  const getThemeClasses = () => {
     switch (themeColor) {
       case 'blue':
         return 'bg-brand-blue text-white hover:bg-brand-blue/80';
@@ -65,8 +58,19 @@ export const SocialIcons = ({ links, onClick, themeColor }: SocialIconsProps) =>
     }
   };
 
-  const themeStyles = getThemeStyles();
+  const getCustomStyles = () => {
+    if (themeColor?.startsWith('#')) {
+      return {
+        backgroundColor: themeColor,
+        color: 'white'
+      };
+    }
+    return undefined;
+  };
+
   const isCustomColor = themeColor?.startsWith('#');
+  const themeClasses = getThemeClasses();
+  const customStyles = getCustomStyles();
 
   return (
     <div className="flex justify-center space-x-3 my-6">
@@ -77,9 +81,9 @@ export const SocialIcons = ({ links, onClick, themeColor }: SocialIconsProps) =>
           target="_blank"
           rel="noopener noreferrer"
           className={`inline-flex items-center justify-center p-3 rounded-full transition-all duration-200 transform hover:scale-110 ${
-            isCustomColor ? '' : themeStyles
+            isCustomColor ? '' : themeClasses
           }`}
-          style={isCustomColor ? themeStyles : undefined}
+          style={customStyles}
           onClick={(e) => {
             onClick(link.id);
           }}
