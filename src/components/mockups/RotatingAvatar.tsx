@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 
 const RotatingAvatar = () => {
   const images = [
-    "public/images/Avatars/avatar1.png",
-    "public/images/Avatars/avatar2.png",
-    "public/images/Avatars/avatar3.png",
-    "public/images/Avatars/avatar4.png",
+    "https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/avatars/profile_avatars/avatar1.png",
+    "https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/avatars/profile_avatars/avatar2.png",
+    "https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/avatars/profile_avatars/avatar3.png",
+    "https://xkglfoncbxrpyrdiekzu.supabase.co/storage/v1/object/public/avatars/profile_avatars/avatar4.png",
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
