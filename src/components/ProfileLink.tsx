@@ -1,3 +1,4 @@
+
 import React from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
@@ -28,6 +29,7 @@ interface ProfileLinkProps {
     section?: string;
     description?: string;
     imageUrl?: string;
+    imageurl?: string;
     price?: string;
     isEmbed?: boolean;
     embedType?: string;
@@ -278,6 +280,9 @@ export const ProfileLink = ({
     }
   };
 
+  // Handle image URL - check both imageUrl and imageurl
+  const imageUrl = link.imageUrl || link.imageurl;
+
   // If this is an embed link, render the embedded content
   if (link.isEmbed) {
     return (
@@ -317,8 +322,8 @@ export const ProfileLink = ({
     );
   }
 
-  // Render product card for product links
-  if (link.link_type === 'product') {
+  // Render product card for ALL product links (not just when link_type === 'product')
+  if (link.link_type === 'product' || isProduct) {
     return (
       <a 
         href={link.url} 
@@ -330,9 +335,9 @@ export const ProfileLink = ({
         }}
       >
         <div className="relative w-full h-48 bg-gray-200">
-          {link.imageUrl ? (
+          {imageUrl ? (
             <img 
-              src={link.imageUrl} 
+              src={imageUrl} 
               alt={link.title} 
               className="w-full h-full object-cover"
             />
@@ -345,49 +350,6 @@ export const ProfileLink = ({
         <div className="p-4">
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-lg text-gray-800">{link.title}</h3>
-            {link.price && <span className="text-green-600 font-medium">{link.price}</span>}
-          </div>
-          {link.description && (
-            <p className="text-gray-600 text-sm mt-2 line-clamp-2">{link.description}</p>
-          )}
-          <div className="flex justify-end mt-3">
-            <span className="text-sm text-blue-500 flex items-center">
-              View details <ExternalLink className="h-3 w-3 ml-1" />
-            </span>
-          </div>
-        </div>
-      </a>
-    );
-  }
-
-  // Render product card for grid layout
-  if (isProduct && layout === 'grid') {
-    return (
-      <a 
-        href={link.url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={`block rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.01] ${cardIndex !== undefined && cardIndex % 2 === 0 ? 'md:mr-2' : 'md:ml-2'}`}
-        onClick={(e) => {
-          onClick();
-        }}
-      >
-        <div className="relative w-full h-48 bg-gray-200">
-          {link.imageUrl ? (
-            <img 
-              src={link.imageUrl} 
-              alt={link.title} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <Package className="h-12 w-12 text-gray-400" />
-            </div>
-          )}
-        </div>
-        <div className="p-4 bg-white">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-lg">{link.title}</h3>
             {link.price && <span className="text-green-600 font-medium">{link.price}</span>}
           </div>
           {link.description && (
@@ -424,13 +386,13 @@ export const ProfileLink = ({
           <div className={`mr-3 ${styles.textColor}`}>{renderIcon()}</div>
           <div>
             <span className={`font-medium ${styles.textColor}`}>{link.title}</span>
-            {link.description && isProduct && (
-              <p className="text-sm text-gray-500 mt-1">{link.description}</p>
+            {link.description && (
+              <p className={`text-sm mt-1 ${styles.textColor === 'text-white' ? 'text-white/70' : 'text-gray-500'}`}>{link.description}</p>
             )}
           </div>
         </div>
         <div className="flex items-center">
-          {link.price && isProduct && (
+          {link.price && (
             <span className="mr-3 font-medium text-green-600">{link.price}</span>
           )}
           <ExternalLink className={`h-4 w-4 ${styles.textColor === 'text-white' ? 'text-white/70' : 'text-gray-400'}`} />

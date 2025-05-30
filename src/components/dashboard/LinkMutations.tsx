@@ -9,10 +9,14 @@ interface Link {
   url: string;
   icon: string;
   linkType?: string;
+  link_type?: string;
   clicks: number;
   position: number;
   isEmbed?: boolean;
   embedType?: string;
+  description?: string;
+  imageUrl?: string;
+  price?: string;
 }
 
 export const useLinkMutations = (userId: string | undefined) => {
@@ -23,9 +27,13 @@ export const useLinkMutations = (userId: string | undefined) => {
     mutationFn: async (link: Partial<Link>) => {
       if (!userId) throw new Error("Not authenticated");
 
+      // Handle different link types
+      const linkType = link.linkType || link.link_type || 'general';
+      
       // Special case for embed links - ensure linkType is set
       if (link.isEmbed) {
         link.linkType = 'embed';
+        link.link_type = 'embed';
       }
 
       if (link.id) {
@@ -36,9 +44,12 @@ export const useLinkMutations = (userId: string | undefined) => {
             title: link.title,
             url: link.url,
             icon: link.icon,
-            linkType: link.linkType,
+            link_type: linkType,
             isEmbed: link.isEmbed,
             embedType: link.embedType,
+            description: link.description,
+            imageurl: link.imageUrl,
+            price: link.price,
           })
           .eq('id', link.id)
           .eq('user_id', userId);
@@ -68,11 +79,14 @@ export const useLinkMutations = (userId: string | undefined) => {
             title: link.title,
             url: link.url,
             icon: link.icon || 'link',
-            linkType: link.linkType,
+            link_type: linkType,
             user_id: userId,
             position: newPosition,
             isEmbed: link.isEmbed,
             embedType: link.embedType,
+            description: link.description,
+            imageurl: link.imageUrl,
+            price: link.price,
           });
 
         if (error) throw error;

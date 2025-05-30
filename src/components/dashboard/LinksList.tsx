@@ -15,8 +15,15 @@ interface Link {
   url: string;
   icon: string;
   linkType?: string;
+  link_type?: string;
   clicks: number;
   position: number;
+  description?: string;
+  imageUrl?: string;
+  imageurl?: string;
+  price?: string;
+  isEmbed?: boolean;
+  embedType?: string;
 }
 
 interface LinksListProps {
@@ -63,12 +70,12 @@ export const LinksList = ({
     }
   });
 
-  // Update link order mutation - modified for drag and drop
+  // Update link order mutation - handles ALL link types including products
   const updateLinksOrder = useMutation({
     mutationFn: async ({ links }: { links: Link[] }) => {
       if (!userId) throw new Error("Not authenticated or no links");
 
-      // Create an array of update promises
+      // Create an array of update promises for ALL links
       const updatePromises = links.map((link, index) => {
         return supabase
           .from('links')
@@ -102,7 +109,7 @@ export const LinksList = ({
     }
   };
 
-  // Handle drag end event
+  // Handle drag end event for ALL link types
   const handleDragEnd = (result: any) => {
     // Dropped outside the list
     if (!result.destination || !links) {
@@ -114,7 +121,7 @@ export const LinksList = ({
       return;
     }
 
-    // Reorder the array
+    // Reorder the array (includes ALL link types: regular, product, social, embed)
     const reorderedLinks = Array.from(links);
     const [removed] = reorderedLinks.splice(result.source.index, 1);
     reorderedLinks.splice(result.destination.index, 0, removed);
