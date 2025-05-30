@@ -5,6 +5,7 @@ import { renderAnimationBackground } from "@/utils/templateAnimations";
 import { templatesLibrary } from "@/constants/templates";
 import { useUserTemplate } from "@/hooks/useUserTemplate";
 import { getTemplateStyles, getBackgroundStyle, getTextColor } from "@/utils/templateStyles";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface LivePreviewProps {
   profile: {
@@ -120,45 +121,47 @@ export const LivePreview = ({
       {/* Render animated background if needed */}
       {effectiveTemplate.backgroundType === 'animated' && renderAnimationBackground(template, { animation_type: effectiveTemplate.animationType })}
       
-      <div className={`${styles.container} ${fontClass} ${textColorClass} overflow-y-auto max-h-[90vh] px-4 py-6`}>
-        {template === 'modern' ? (
-          <div className={styles.header}>
-            <Avatar className={styles.avatar}>
-              <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name || profile.username} />
-              <AvatarFallback>{(profile.display_name || profile.username || 'User').substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className={styles.title}>{profile.display_name || profile.username || 'Username'}</h1>
-              {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
+      <ScrollArea className="h-[600px]">
+        <div className={`${styles.container} ${fontClass} ${textColorClass} px-4 py-6`}>
+          {template === 'modern' ? (
+            <div className={styles.header}>
+              <Avatar className={styles.avatar}>
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name || profile.username} />
+                <AvatarFallback>{(profile.display_name || profile.username || 'User').substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className={styles.title}>{profile.display_name || profile.username || 'Username'}</h1>
+                {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className={styles.header}>
-            <Avatar className={`mx-auto mb-2 ${styles.avatar}`}>
-              <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name || profile.username} />
-              <AvatarFallback>{(profile.display_name || profile.username || 'User').substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <h1 className={styles.title}>{profile.display_name || profile.username || 'Username'}</h1>
-            {profile.bio && <p className={`mt-1 ${styles.bio}`}>{profile.bio}</p>}
-          </div>
-        )}
+          ) : (
+            <div className={styles.header}>
+              <Avatar className={`mx-auto mb-2 ${styles.avatar}`}>
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name || profile.username} />
+                <AvatarFallback>{(profile.display_name || profile.username || 'User').substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <h1 className={styles.title}>{profile.display_name || profile.username || 'Username'}</h1>
+              {profile.bio && <p className={`mt-1 ${styles.bio}`}>{profile.bio}</p>}
+            </div>
+          )}
 
-        <div className={styles.links}>
-          {sortedLinks.map((link) => (
-            <ProfileLink 
-              key={link.id} 
-              link={link} 
-              themeColor={effectiveThemeColor}
-              onClick={() => {}} 
-              template={template}
-              buttonStyle={effectiveTemplate.buttonStyle}
-              fontFamily={effectiveTemplate.fontFamily}
-              gradientFrom={effectiveTemplate.gradientFrom}
-              gradientTo={effectiveTemplate.gradientTo}
-            />
-          ))}
+          <div className={styles.links}>
+            {sortedLinks.map((link) => (
+              <ProfileLink 
+                key={link.id} 
+                link={link} 
+                themeColor={effectiveThemeColor}
+                onClick={() => {}} 
+                template={template}
+                buttonStyle={effectiveTemplate.buttonStyle}
+                fontFamily={effectiveTemplate.fontFamily}
+                gradientFrom={effectiveTemplate.gradientFrom}
+                gradientTo={effectiveTemplate.gradientTo}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
