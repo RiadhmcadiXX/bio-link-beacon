@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -43,8 +45,11 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
     linkType: "general",
     clicks: 0,
     position: 0,
-    embedType: "direct", // new field: 'direct' or 'collapsible'
-    isEmbed: false // new field to identify embed links
+    embedType: "direct",
+    isEmbed: false,
+    description: "",
+    imageUrl: "",
+    price: ""
   });
 
   const [activeTab, setActiveTab] = useState("general");
@@ -56,22 +61,25 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
         title: link.title || "",
         url: link.url || "",
         icon: link.icon || "link",
-        linkType: link.linkType || "general",
+        linkType: link.linkType || link.link_type || "general",
         clicks: link.clicks || 0,
         position: link.position || 0,
         embedType: link.embedType || "direct",
-        isEmbed: link.isEmbed || false
+        isEmbed: link.isEmbed || false,
+        description: link.description || "",
+        imageUrl: link.imageUrl || link.imageurl || "",
+        price: link.price || ""
       });
       
       // Set the active tab based on the link type
-      if (link.linkType === "social") setActiveTab("social");
-      else if (link.linkType === "product") setActiveTab("product");
-      else if (link.linkType === "embed" || link.isEmbed) setActiveTab("embed");
+      if (link.linkType === "social" || link.link_type === "social") setActiveTab("social");
+      else if (link.linkType === "product" || link.link_type === "product") setActiveTab("product");
+      else if (link.linkType === "embed" || link.link_type === "embed" || link.isEmbed) setActiveTab("embed");
       else setActiveTab("general");
     }
   }, [link]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -88,7 +96,7 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
     if (value === "social") {
       setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "twitter" : prev.icon, isEmbed: false }));
     } else if (value === "product") {
-      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "shopping-cart" : prev.icon, isEmbed: false }));
+      setFormData(prev => ({ ...prev, icon: prev.icon === "link" ? "package" : prev.icon, isEmbed: false }));
     } else if (value === "embed") {
       setFormData(prev => ({ ...prev, 
         icon: "video", 
@@ -112,6 +120,9 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
       submissionData.isEmbed = true;
       submissionData.linkType = "embed";
     }
+    
+    // Set link_type for consistency with database
+    submissionData.link_type = submissionData.linkType;
     
     onSave(submissionData);
   };
@@ -275,6 +286,37 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                     onChange={handleChange}
                     placeholder="https://shop.com/product"
                     required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Brief description of your product..."
+                    rows={3}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="imageUrl">Product Image URL</Label>
+                  <Input
+                    id="imageUrl"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleChange}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price</Label>
+                  <Input
+                    id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    placeholder="$99.99"
                   />
                 </div>
               </TabsContent>
