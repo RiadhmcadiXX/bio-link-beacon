@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ExternalLink, Share2 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -65,7 +64,7 @@ export const BioLinkBlock = () => {
     mutationFn: async (linkId: string) => {
       const { error } = await supabase.rpc('increment_link_click', { 
         link_id: linkId 
-      } as any);
+      });
       if (error) throw error;
     },
     onSettled: () => {
