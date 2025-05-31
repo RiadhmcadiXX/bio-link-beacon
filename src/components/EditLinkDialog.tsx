@@ -152,12 +152,14 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("Submitting form with data:", formData);
+    console.log("Form data before submission:", formData);
     
     // Create submission data with proper database field names
     const submissionData = {
       ...formData,
-      link_type: activeTab === "embed" ? "embed" : formData.linkType
+      link_type: activeTab === "embed" ? "embed" : formData.linkType,
+      // Ensure imageUrl is included in submission
+      imageUrl: formData.imageUrl
     };
     
     // Make sure to set isEmbed correctly for embed type links
@@ -165,7 +167,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       submissionData.isEmbed = true;
     }
     
-    console.log("Final submission data:", submissionData);
+    console.log("Final submission data with imageUrl:", submissionData);
     onSave(submissionData);
   };
 
