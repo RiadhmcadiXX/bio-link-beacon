@@ -62,6 +62,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
 
   useEffect(() => {
     if (link) {
+      // Editing existing link
       setFormData({
         id: link.id || "",
         title: link.title || "",
@@ -82,8 +83,25 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       else if (link.linkType === "product" || link.link_type === "product") setActiveTab("product");
       else if (link.linkType === "embed" || link.link_type === "embed" || link.isEmbed) setActiveTab("embed");
       else setActiveTab("general");
+    } else {
+      // Creating new link - reset form
+      setFormData({
+        id: "", // Empty string for new links
+        title: "",
+        url: "",
+        icon: "link",
+        linkType: "general",
+        clicks: 0,
+        position: 0,
+        embedType: "direct",
+        isEmbed: false,
+        description: "",
+        imageUrl: "",
+        price: ""
+      });
+      setActiveTab("general");
     }
-  }, [link]);
+  }, [link, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

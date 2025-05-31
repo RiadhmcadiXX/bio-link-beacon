@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Link {
-  id: string;
+  id?: string;
   title: string;
   url: string;
   icon: string;
@@ -36,7 +36,8 @@ export const useLinkMutations = (userId: string | undefined) => {
         link.link_type = 'embed';
       }
 
-      if (link.id) {
+      // Check if this is an update (link has an id and it's not empty)
+      if (link.id && link.id.trim() !== '') {
         // Update existing link
         const { error } = await supabase
           .from('links')
@@ -93,7 +94,7 @@ export const useLinkMutations = (userId: string | undefined) => {
       }
     },
     onSuccess: (_, variables) => {
-      toast.success(variables.id ? "Link updated successfully!" : "Link added successfully!");
+      toast.success(variables.id && variables.id.trim() !== '' ? "Link updated successfully!" : "Link added successfully!");
     },
     onError: (error) => {
       console.error("Failed to save link:", error);
