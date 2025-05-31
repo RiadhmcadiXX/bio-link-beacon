@@ -38,14 +38,14 @@ export const useLinkMutations = (userId: string | undefined) => {
         link.link_type = 'embed';
       }
 
-      // Prepare the data to save
+      // Prepare the data to save - ensure image_url is properly included
       const dataToSave = {
         title: link.title,
         url: link.url,
         icon: link.icon,
         link_type: linkType,
         description: link.description,
-        image_url: link.image_url || null, // Ensure we save the imageUrl to imageurl field
+        image_url: link.image_url || null, // Make sure image_url is included
         price: link.price,
       };
 
@@ -97,7 +97,7 @@ export const useLinkMutations = (userId: string | undefined) => {
           throw error;
         }
         
-        console.log("Link created successfully");
+        console.log("Link created successfully with image_url:", dataToSave.image_url);
       }
     },
     onSuccess: (_, variables) => {
