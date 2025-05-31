@@ -13,7 +13,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Link2, Package, Share2, Video } from "lucide-react";
+import { 
+  Link2, 
+  Package, 
+  Share2, 
+  Video, 
+  Globe, 
+  Twitter, 
+  Youtube, 
+  Facebook, 
+  Instagram, 
+  Linkedin, 
+  Github, 
+  ShoppingCart, 
+  Mail, 
+  Phone 
+} from "lucide-react";
 
 interface EditLinkDialogProps {
   isOpen: boolean;
