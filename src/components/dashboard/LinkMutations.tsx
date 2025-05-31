@@ -46,10 +46,8 @@ export const useLinkMutations = (userId: string | undefined) => {
             url: link.url,
             icon: link.icon,
             link_type: linkType,
-            isEmbed: link.isEmbed,
-            embedType: link.embedType,
             description: link.description,
-            imageurl: link.imageUrl,
+            imageurl: link.imageUrl, // Make sure to use imageUrl from form
             price: link.price,
           })
           .eq('id', link.id)
@@ -83,10 +81,8 @@ export const useLinkMutations = (userId: string | undefined) => {
             link_type: linkType,
             user_id: userId,
             position: newPosition,
-            isEmbed: link.isEmbed,
-            embedType: link.embedType,
             description: link.description,
-            imageurl: link.imageUrl,
+            imageurl: link.imageUrl, // Make sure to use imageUrl from form
             price: link.price,
           });
 

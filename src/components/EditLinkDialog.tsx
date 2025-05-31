@@ -74,7 +74,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
         embedType: link.embedType || "direct",
         isEmbed: link.isEmbed || false,
         description: link.description || "",
-        imageUrl: link.imageUrl || link.imageurl || "",
+        imageUrl: link.imageUrl || link.imageurl || "", // Handle both field names
         price: link.price || ""
       });
       
@@ -138,15 +138,21 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Uploading image:", file.name);
       const uploadedUrl = await uploadImage(file);
       if (uploadedUrl) {
+        console.log("Image uploaded successfully:", uploadedUrl);
         setFormData({ ...formData, imageUrl: uploadedUrl });
+      } else {
+        console.error("Failed to upload image");
       }
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log("Submitting form with data:", formData);
     
     // Create submission data with proper database field names
     const submissionData = {
@@ -159,6 +165,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       submissionData.isEmbed = true;
     }
     
+    console.log("Final submission data:", submissionData);
     onSave(submissionData);
   };
 
@@ -396,6 +403,8 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                         src={formData.imageUrl} 
                         alt="Product preview" 
                         className="w-20 h-20 object-cover rounded border"
+                        onLoad={() => console.log("Image preview loaded successfully:", formData.imageUrl)}
+                        onError={(e) => console.error("Failed to load image preview:", formData.imageUrl, e)}
                       />
                     </div>
                   )}
