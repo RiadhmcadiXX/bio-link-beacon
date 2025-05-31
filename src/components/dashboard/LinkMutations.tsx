@@ -27,7 +27,9 @@ export const useLinkMutations = (userId: string | undefined) => {
     mutationFn: async (link: Partial<Link>) => {
       if (!userId) throw new Error("Not authenticated");
 
-      console.log("Saving link with data:", link);
+      console.log("=== MUTATION DEBUG START ===");
+      console.log("Received link data:", link);
+      console.log("Image URL received:", link.image_url);
 
       // Handle different link types
       const linkType = link.linkType || link.link_type || 'general';
@@ -38,36 +40,42 @@ export const useLinkMutations = (userId: string | undefined) => {
         link.link_type = 'embed';
       }
 
-      // Prepare the data to save - ensure image_url is properly included
-      const dataToSave = {
+      // Create the exact data structure that matches database schema
+      const linkDataForDB = {
         title: link.title,
         url: link.url,
-        icon: link.icon,
+        icon: link.icon || 'link',
         link_type: linkType,
-        description: link.description,
-        image_url: link.image_url || null,
-        price: link.price,
+        description: link.description || null,
+        image_url: link.image_url || null, // This MUST match the database column name
+        price: link.price || null,
       };
 
-      console.log("Data being saved to database:", dataToSave);
-      console.log("Image URL being saved:", dataToSave.image_url);
+      console.log("Prepared data for database:", linkDataForDB);
+      console.log("Image URL for database:", linkDataForDB.image_url);
 
       // Check if this is an update (link has an id and it's not empty)
       if (link.id && link.id.trim() !== '') {
+        console.log("Updating existing link with ID:", link.id);
+        
         // Update existing link
-        const { error } = await supabase
+        const { data: updateResult, error } = await supabase
           .from('links')
-          .update(dataToSave)
+          .update(linkDataForDB)
           .eq('id', link.id)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .select();
 
         if (error) {
-          console.error("Error updating link:", error);
+          console.error("Database update error:", error);
           throw error;
         }
         
-        console.log("Link updated successfully with image_url:", dataToSave.image_url);
+        console.log("Update successful, result:", updateResult);
+        console.log("Updated link image_url:", updateResult?.[0]?.image_url);
       } else {
+        console.log("Creating new link");
+        
         // Get links to determine the highest position
         const { data: links, error: getLinksError } = await supabase
           .from('links')
@@ -84,24 +92,31 @@ export const useLinkMutations = (userId: string | undefined) => {
           newPosition = (links[0].position || 0) + 1;
         }
 
-        // Add new link with image_url
-        const { data: insertedData, error } = await supabase
+        const finalInsertData = {
+          ...linkDataForDB,
+          user_id: userId,
+          position: newPosition,
+        };
+
+        console.log("Final insert data:", finalInsertData);
+        console.log("Final image_url for insert:", finalInsertData.image_url);
+
+        // Insert new link
+        const { data: insertResult, error } = await supabase
           .from('links')
-          .insert({
-            ...dataToSave,
-            user_id: userId,
-            position: newPosition,
-          })
+          .insert(finalInsertData)
           .select();
 
         if (error) {
-          console.error("Error creating link:", error);
+          console.error("Database insert error:", error);
           throw error;
         }
         
-        console.log("Link created successfully:", insertedData);
-        console.log("Image URL saved:", dataToSave.image_url);
+        console.log("Insert successful, result:", insertResult);
+        console.log("Inserted link image_url:", insertResult?.[0]?.image_url);
       }
+      
+      console.log("=== MUTATION DEBUG END ===");
     },
     onSuccess: (_, variables) => {
       toast.success(variables.id && variables.id.trim() !== '' ? "Link updated successfully!" : "Link added successfully!");

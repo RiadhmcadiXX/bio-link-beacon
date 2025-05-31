@@ -74,7 +74,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
         embedType: link.embedType || "direct",
         isEmbed: link.isEmbed || false,
         description: link.description || "",
-        image_url: link.image_url || link.imageurl || "",
+        image_url: link.image_url || "",
         price: link.price || ""
       });
       
@@ -138,13 +138,17 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("Uploading image:", file.name);
+      console.log("Starting image upload for file:", file.name);
       const uploadedUrl = await uploadImage(file);
       if (uploadedUrl) {
-        console.log("Image uploaded successfully, setting image_url:", uploadedUrl);
-        setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
+        console.log("Image uploaded successfully, updating formData with URL:", uploadedUrl);
+        setFormData(prev => ({ 
+          ...prev, 
+          image_url: uploadedUrl 
+        }));
+        console.log("FormData updated with image_url:", uploadedUrl);
       } else {
-        console.error("Failed to upload image");
+        console.error("Failed to upload image - no URL returned");
       }
     }
   };
@@ -152,25 +156,33 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("Form data before submission:", formData);
-    console.log("Image URL in form data:", formData.image_url);
+    console.log("=== FORM SUBMISSION DEBUG ===");
+    console.log("Raw form data:", formData);
+    console.log("Image URL from form:", formData.image_url);
+    console.log("Active tab:", activeTab);
     
-    // Create submission data with proper field mapping
-    const submissionData = {
-      ...formData,
+    // Create final submission object with explicit image_url mapping
+    const finalSubmissionData = {
+      id: formData.id,
+      title: formData.title,
+      url: formData.url,
+      icon: formData.icon,
+      linkType: activeTab === "embed" ? "embed" : formData.linkType,
       link_type: activeTab === "embed" ? "embed" : formData.linkType,
-      // Explicitly ensure image_url is included
-      image_url: formData.image_url,
+      clicks: formData.clicks,
+      position: formData.position,
+      isEmbed: activeTab === "embed",
+      embedType: formData.embedType,
+      description: formData.description,
+      image_url: formData.image_url, // Explicit mapping
+      price: formData.price
     };
     
-    // Make sure to set isEmbed correctly for embed type links
-    if (activeTab === "embed") {
-      submissionData.isEmbed = true;
-    }
+    console.log("Final submission data:", finalSubmissionData);
+    console.log("Image URL being submitted:", finalSubmissionData.image_url);
+    console.log("=== END DEBUG ===");
     
-    console.log("Final submission data:", submissionData);
-    console.log("Image URL being submitted:", submissionData.image_url);
-    onSave(submissionData);
+    onSave(finalSubmissionData);
   };
 
   // Make sure URL has protocol
@@ -407,10 +419,8 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                         src={formData.image_url} 
                         alt="Product preview" 
                         className="w-20 h-20 object-cover rounded border"
-                        onLoad={() => console.log("Image preview loaded successfully:", formData.image_url)}
-                        onError={(e) => console.error("Failed to load image preview:", formData.image_url, e)}
                       />
-                      <p className="text-xs text-gray-500 mt-1">Image URL: {formData.image_url}</p>
+                      <p className="text-xs text-gray-500 mt-1">Preview of: {formData.image_url}</p>
                     </div>
                   )}
                 </div>
