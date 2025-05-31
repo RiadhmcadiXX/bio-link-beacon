@@ -54,7 +54,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
     embedType: "direct",
     isEmbed: false,
     description: "",
-    imageUrl: "",
+    image_url: "",
     price: ""
   });
 
@@ -74,7 +74,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
         embedType: link.embedType || "direct",
         isEmbed: link.isEmbed || false,
         description: link.description || "",
-        imageUrl: link.imageUrl || link.imageurl || "", // Handle both field names
+        image_url: link.image_url || link.imageurl || "", // Handle both field names
         price: link.price || ""
       });
       
@@ -96,7 +96,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
         embedType: "direct",
         isEmbed: false,
         description: "",
-        imageUrl: "",
+        image_url: "",
         price: ""
       });
       setActiveTab("general");
@@ -142,7 +142,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       const uploadedUrl = await uploadImage(file);
       if (uploadedUrl) {
         console.log("Image uploaded successfully:", uploadedUrl);
-        setFormData({ ...formData, imageUrl: uploadedUrl });
+        setFormData({ ...formData, image_url: uploadedUrl });
       } else {
         console.error("Failed to upload image");
       }
@@ -159,7 +159,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       ...formData,
       link_type: activeTab === "embed" ? "embed" : formData.linkType,
       // Ensure imageUrl is included in submission
-      imageUrl: formData.imageUrl
+      image_url: formData.image_url
     };
     
     // Make sure to set isEmbed correctly for embed type links
@@ -361,12 +361,12 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="imageUrl">Product Image</Label>
+                  <Label htmlFor="image_url">Product Image</Label>
                   <div className="space-y-2">
                     <Input
-                      id="imageUrl"
-                      name="imageUrl"
-                      value={formData.imageUrl}
+                      id="image_url"
+                      name="image_url"
+                      value={formData.image_url}
                       onChange={handleChange}
                       placeholder="https://example.com/image.jpg or upload an image"
                     />
@@ -399,14 +399,14 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                       />
                     </div>
                   </div>
-                  {formData.imageUrl && (
+                  {formData.image_url && (
                     <div className="mt-2">
                       <img 
-                        src={formData.imageUrl} 
+                        src={formData.image_url} 
                         alt="Product preview" 
                         className="w-20 h-20 object-cover rounded border"
-                        onLoad={() => console.log("Image preview loaded successfully:", formData.imageUrl)}
-                        onError={(e) => console.error("Failed to load image preview:", formData.imageUrl, e)}
+                        onLoad={() => console.log("Image preview loaded successfully:", formData.image_url)}
+                        onError={(e) => console.error("Failed to load image preview:", formData.image_url, e)}
                       />
                     </div>
                   )}

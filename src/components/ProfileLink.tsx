@@ -27,7 +27,7 @@ interface ProfileLinkProps {
     clicks?: number;
     section?: string;
     description?: string;
-    imageUrl?: string;
+    image_url?: string;
     imageurl?: string;
     price?: string;
     isEmbed?: boolean;
@@ -280,7 +280,7 @@ export const ProfileLink = ({
   };
 
   // Handle image URL - check both imageUrl and imageurl
-  const imageUrl = link.imageUrl || link.imageurl;
+  const imageUrl = link.image_url || link.imageurl;
 
   // If this is an embed link, render the embedded content
   if (link.isEmbed) {
