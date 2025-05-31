@@ -27,8 +27,11 @@ import {
   Github, 
   ShoppingCart, 
   Mail, 
-  Phone 
+  Phone,
+  Upload,
+  Loader2
 } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface EditLinkDialogProps {
   isOpen: boolean;
@@ -38,6 +41,8 @@ interface EditLinkDialogProps {
 }
 
 export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialogProps) => {
+  const { uploadImage, isUploading } = useImageUpload();
+
   const [formData, setFormData] = useState({
     id: "",
     title: "",
@@ -112,15 +117,13 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
     setFormData({ ...formData, embedType: value });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setFormData({ ...formData, imageUrl: result });
-      };
-      reader.readAsDataURL(file);
+      const uploadedUrl = await uploadImage(file);
+      if (uploadedUrl) {
+        setFormData({ ...formData, imageUrl: uploadedUrl });
+      }
     }
   };
 
@@ -338,15 +341,36 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                       name="imageUrl"
                       value={formData.imageUrl}
                       onChange={handleChange}
-                      placeholder="https://example.com/image.jpg or paste image URL"
+                      placeholder="https://example.com/image.jpg or upload an image"
                     />
-                    <div className="text-sm text-gray-500">Or upload an image:</div>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="cursor-pointer"
-                    />
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Image
+                          </>
+                        )}
+                      </Button>
+                      <input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </div>
                   </div>
                   {formData.imageUrl && (
                     <div className="mt-2">
@@ -463,7 +487,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
             <Button 
               type="submit"
               className="bg-brand-purple hover:bg-brand-purple/90"
-              disabled={!formData.title || !formData.url}
+              disabled={!formData.title || !formData.url || isUploading}
             >
               {link ? "Update" : "Add"} Link
             </Button>
