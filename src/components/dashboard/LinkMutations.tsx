@@ -15,7 +15,7 @@ interface Link {
   isEmbed?: boolean;
   embedType?: string;
   description?: string;
-  imageUrl?: string;
+  image_url?: string;
   price?: string;
 }
 
@@ -45,7 +45,7 @@ export const useLinkMutations = (userId: string | undefined) => {
         icon: link.icon,
         link_type: linkType,
         description: link.description,
-        imageurl: link.imageUrl || null, // Ensure we save the imageUrl to imageurl field
+        image_url: link.image_url || null, // Ensure we save the imageUrl to imageurl field
         price: link.price,
       };
 
