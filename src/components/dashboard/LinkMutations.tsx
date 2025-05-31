@@ -27,6 +27,8 @@ export const useLinkMutations = (userId: string | undefined) => {
     mutationFn: async (link: Partial<Link>) => {
       if (!userId) throw new Error("Not authenticated");
 
+      console.log("Saving link with data:", link);
+
       // Handle different link types
       const linkType = link.linkType || link.link_type || 'general';
       
@@ -36,24 +38,34 @@ export const useLinkMutations = (userId: string | undefined) => {
         link.link_type = 'embed';
       }
 
+      // Prepare the data to save
+      const dataToSave = {
+        title: link.title,
+        url: link.url,
+        icon: link.icon,
+        link_type: linkType,
+        description: link.description,
+        imageurl: link.imageUrl || null, // Ensure we save the imageUrl to imageurl field
+        price: link.price,
+      };
+
+      console.log("Data being saved to database:", dataToSave);
+
       // Check if this is an update (link has an id and it's not empty)
       if (link.id && link.id.trim() !== '') {
         // Update existing link
         const { error } = await supabase
           .from('links')
-          .update({
-            title: link.title,
-            url: link.url,
-            icon: link.icon,
-            link_type: linkType,
-            description: link.description,
-            imageurl: link.imageUrl, // Make sure to use imageUrl from form
-            price: link.price,
-          })
+          .update(dataToSave)
           .eq('id', link.id)
           .eq('user_id', userId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating link:", error);
+          throw error;
+        }
+        
+        console.log("Link updated successfully");
       } else {
         // Get links to determine the highest position
         const { data: links, error: getLinksError } = await supabase
@@ -75,18 +87,17 @@ export const useLinkMutations = (userId: string | undefined) => {
         const { error } = await supabase
           .from('links')
           .insert({
-            title: link.title,
-            url: link.url,
-            icon: link.icon || 'link',
-            link_type: linkType,
+            ...dataToSave,
             user_id: userId,
             position: newPosition,
-            description: link.description,
-            imageurl: link.imageUrl, // Make sure to use imageUrl from form
-            price: link.price,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating link:", error);
+          throw error;
+        }
+        
+        console.log("Link created successfully");
       }
     },
     onSuccess: (_, variables) => {
