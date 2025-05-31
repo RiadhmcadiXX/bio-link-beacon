@@ -153,13 +153,14 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
     e.preventDefault();
     
     console.log("Form data before submission:", formData);
+    console.log("Image URL in form data:", formData.image_url);
     
     // Create submission data with proper field mapping
     const submissionData = {
       ...formData,
       link_type: activeTab === "embed" ? "embed" : formData.linkType,
-      // Ensure image_url is properly included in the submission
-      image_url: formData.image_url
+      // Explicitly ensure image_url is included
+      image_url: formData.image_url,
     };
     
     // Make sure to set isEmbed correctly for embed type links
@@ -167,7 +168,8 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       submissionData.isEmbed = true;
     }
     
-    console.log("Final submission data with image_url:", submissionData);
+    console.log("Final submission data:", submissionData);
+    console.log("Image URL being submitted:", submissionData.image_url);
     onSave(submissionData);
   };
 
@@ -408,6 +410,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
                         onLoad={() => console.log("Image preview loaded successfully:", formData.image_url)}
                         onError={(e) => console.error("Failed to load image preview:", formData.image_url, e)}
                       />
+                      <p className="text-xs text-gray-500 mt-1">Image URL: {formData.image_url}</p>
                     </div>
                   )}
                 </div>

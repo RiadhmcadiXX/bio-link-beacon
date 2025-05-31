@@ -45,11 +45,12 @@ export const useLinkMutations = (userId: string | undefined) => {
         icon: link.icon,
         link_type: linkType,
         description: link.description,
-        image_url: link.image_url || null, // Make sure image_url is included
+        image_url: link.image_url || null,
         price: link.price,
       };
 
       console.log("Data being saved to database:", dataToSave);
+      console.log("Image URL being saved:", dataToSave.image_url);
 
       // Check if this is an update (link has an id and it's not empty)
       if (link.id && link.id.trim() !== '') {
@@ -65,7 +66,7 @@ export const useLinkMutations = (userId: string | undefined) => {
           throw error;
         }
         
-        console.log("Link updated successfully");
+        console.log("Link updated successfully with image_url:", dataToSave.image_url);
       } else {
         // Get links to determine the highest position
         const { data: links, error: getLinksError } = await supabase
@@ -83,26 +84,23 @@ export const useLinkMutations = (userId: string | undefined) => {
           newPosition = (links[0].position || 0) + 1;
         }
 
-        debugger;
-        // Add new link
-        const { error } = await supabase
+        // Add new link with image_url
+        const { data: insertedData, error } = await supabase
           .from('links')
           .insert({
             ...dataToSave,
             user_id: userId,
             position: newPosition,
-          });
-
-          console.log("link.image_url value:", dataToSave.image_url);
-
-          alert(`Image URL: ${dataToSave.image_url}`);
+          })
+          .select();
 
         if (error) {
           console.error("Error creating link:", error);
           throw error;
         }
         
-        console.log("Link created successfully with image_url:", dataToSave.image_url);
+        console.log("Link created successfully:", insertedData);
+        console.log("Image URL saved:", dataToSave.image_url);
       }
     },
     onSuccess: (_, variables) => {
