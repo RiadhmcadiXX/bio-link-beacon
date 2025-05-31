@@ -83,6 +83,7 @@ export const useLinkMutations = (userId: string | undefined) => {
           newPosition = (links[0].position || 0) + 1;
         }
 
+        debugger;
         // Add new link
         const { error } = await supabase
           .from('links')
@@ -91,6 +92,10 @@ export const useLinkMutations = (userId: string | undefined) => {
             user_id: userId,
             position: newPosition,
           });
+
+          console.log("link.image_url value:", dataToSave.image_url);
+
+          alert(`Image URL: ${dataToSave.image_url}`);
 
         if (error) {
           console.error("Error creating link:", error);
