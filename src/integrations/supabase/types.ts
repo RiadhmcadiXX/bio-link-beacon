@@ -16,7 +16,7 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
-          imageurl: string | null
+          image_url: string | null
           link_type: string | null
           position: number | null
           price: string | null
@@ -31,7 +31,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
-          imageurl?: string | null
+          image_url?: string | null
           link_type?: string | null
           position?: number | null
           price?: string | null
@@ -46,7 +46,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
-          imageurl?: string | null
+          image_url?: string | null
           link_type?: string | null
           position?: number | null
           price?: string | null

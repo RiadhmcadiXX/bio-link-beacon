@@ -74,7 +74,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
         embedType: link.embedType || "direct",
         isEmbed: link.isEmbed || false,
         description: link.description || "",
-        image_url: link.image_url || link.imageurl || "", // Handle both field names
+        image_url: link.image_url || link.imageurl || "",
         price: link.price || ""
       });
       
@@ -86,7 +86,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
     } else {
       // Creating new link - reset form
       setFormData({
-        id: "", // Empty string for new links
+        id: "",
         title: "",
         url: "",
         icon: "link",
@@ -141,8 +141,8 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       console.log("Uploading image:", file.name);
       const uploadedUrl = await uploadImage(file);
       if (uploadedUrl) {
-        console.log("Image uploaded successfully:", uploadedUrl);
-        setFormData({ ...formData, image_url: uploadedUrl });
+        console.log("Image uploaded successfully, setting image_url:", uploadedUrl);
+        setFormData(prev => ({ ...prev, image_url: uploadedUrl }));
       } else {
         console.error("Failed to upload image");
       }
@@ -154,11 +154,11 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
     
     console.log("Form data before submission:", formData);
     
-    // Create submission data with proper database field names
+    // Create submission data with proper field mapping
     const submissionData = {
       ...formData,
       link_type: activeTab === "embed" ? "embed" : formData.linkType,
-      // Ensure imageUrl is included in submission
+      // Ensure image_url is properly included in the submission
       image_url: formData.image_url
     };
     
@@ -167,7 +167,7 @@ export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialog
       submissionData.isEmbed = true;
     }
     
-    console.log("Final submission data with imageUrl:", submissionData);
+    console.log("Final submission data with image_url:", submissionData);
     onSave(submissionData);
   };
 
