@@ -40,28 +40,22 @@ export const useLinkMutations = (userId: string | undefined) => {
         link.link_type = 'embed';
       }
 
-      // Create the exact data structure that matches database schema
-      const linkDataForDB = {
-        title: link.title,
-        url: link.url,
-        icon: link.icon || 'link',
-        link_type: linkType,
-        description: link.description || null,
-        image_url: link.image_url || null, // This MUST match the database column name
-        price: link.price || null,
-      };
-
-      console.log("Prepared data for database:", linkDataForDB);
-      console.log("Image URL for database:", linkDataForDB.image_url);
-
       // Check if this is an update (link has an id and it's not empty)
       if (link.id && link.id.trim() !== '') {
         console.log("Updating existing link with ID:", link.id);
         
-        // Update existing link
+        // Update existing link with explicit column mapping
         const { data: updateResult, error } = await supabase
           .from('links')
-          .update(linkDataForDB)
+          .update({
+            title: link.title,
+            url: link.url,
+            icon: link.icon || 'link',
+            link_type: linkType,
+            description: link.description || null,
+            image_url: link.image_url || null,
+            price: link.price || null
+          })
           .eq('id', link.id)
           .eq('user_id', userId)
           .select();
@@ -92,19 +86,21 @@ export const useLinkMutations = (userId: string | undefined) => {
           newPosition = (links[0].position || 0) + 1;
         }
 
-        const finalInsertData = {
-          ...linkDataForDB,
-          user_id: userId,
-          position: newPosition,
-        };
-
-        console.log("Final insert data:", finalInsertData);
-        console.log("Final image_url for insert:", finalInsertData.image_url);
-
-        // Insert new link
+        // Insert new link with explicit column mapping
         const { data: insertResult, error } = await supabase
           .from('links')
-          .insert(finalInsertData)
+          .insert({
+            user_id: userId,
+            title: link.title,
+            url: link.url,
+            icon: link.icon || 'link',
+            link_type: linkType,
+            description: link.description || null,
+            image_url: link.image_url || null,
+            price: link.price || null,
+            position: newPosition,
+            clicks: 0
+          })
           .select();
 
         if (error) {
