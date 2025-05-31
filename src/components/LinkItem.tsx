@@ -1,8 +1,12 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { 
+  Edit2, 
+  Trash2, 
+  GripVertical, 
+  ExternalLink,
   Link2, 
   Twitter, 
   Youtube, 
@@ -15,10 +19,7 @@ import {
   Phone,
   ShoppingCart,
   Package,
-  Video,
-  Pencil, 
-  Trash2,
-  GripVertical
+  Video
 } from "lucide-react";
 
 interface LinkItemProps {
@@ -29,11 +30,12 @@ interface LinkItemProps {
     icon: string;
     link_type?: string;
     clicks: number;
-    isEmbed?: boolean;
-    embedType?: string;
     description?: string;
     imageUrl?: string;
+    imageurl?: string;
     price?: string;
+    isEmbed?: boolean;
+    embedType?: string;
   };
   onEdit: () => void;
   onDelete: () => void;
@@ -41,13 +43,7 @@ interface LinkItemProps {
   dragHandleProps?: any;
 }
 
-export const LinkItem = ({ 
-  link, 
-  onEdit, 
-  onDelete,
-  isDragging,
-  dragHandleProps
-}: LinkItemProps) => {
+export const LinkItem = ({ link, onEdit, onDelete, isDragging, dragHandleProps }: LinkItemProps) => {
   // Function to render icon based on link.icon
   const renderIcon = () => {
     switch (link.icon) {
@@ -64,6 +60,7 @@ export const LinkItem = ({
       case 'github':
         return <Github className="h-4 w-4" />;
       case 'globe':
+      case 'website':
         return <Globe className="h-4 w-4" />;
       case 'mail':
         return <Mail className="h-4 w-4" />;
@@ -80,76 +77,99 @@ export const LinkItem = ({
     }
   };
 
-  // Function to get background color based on link type
-  const getLinkTypeStyles = () => {
+  // Handle image URL - check both imageUrl and imageurl
+  const imageUrl = link.imageUrl || link.imageurl;
+
+  const getLinkTypeLabel = () => {
     switch (link.link_type) {
       case 'social':
-        return 'bg-blue-50';
+        return 'Social';
       case 'product':
-        return 'bg-green-50';
+        return 'Product';
       case 'embed':
-        return 'bg-purple-50';
+        return 'Embed';
       default:
-        return 'bg-gray-100';
+        return 'Link';
     }
   };
 
-  // Extract YouTube video ID for display
-  const getYouTubeVideoId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
   return (
-    <Card className={`p-4 ${isDragging ? 'opacity-60' : ''} transition-all`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <div 
-            className="mr-2 cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing" 
-            {...dragHandleProps}
-          >
-            <GripVertical className="h-5 w-5" />
+    <Card 
+      className={`p-4 transition-all duration-200 ${
+        isDragging ? "shadow-lg rotate-1 opacity-90" : "hover:shadow-md"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Drag Handle */}
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="h-4 w-4 text-gray-400" />
+        </div>
+
+        {/* Product Image or Icon */}
+        {link.link_type === 'product' && imageUrl ? (
+          <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+            <img 
+              src={imageUrl} 
+              alt={link.title} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to package icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'w-full h-full flex items-center justify-center';
+                fallbackDiv.innerHTML = '<svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>';
+                e.currentTarget.parentElement?.appendChild(fallbackDiv);
+              }}
+            />
           </div>
-          <div className={`w-10 h-10 rounded-md ${getLinkTypeStyles()} flex items-center justify-center mr-4`}>
+        ) : (
+          <div className="text-gray-500">
             {renderIcon()}
           </div>
-          <div>
-            <h3 className="font-medium">{link.title}</h3>
-            <a 
-              href={link.url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-sm text-gray-500 hover:text-brand-purple truncate block max-w-[200px] sm:max-w-[300px]"
-            >
-              {link.url}
-            </a>
-            {link.link_type === 'product' && (
-              <div className="text-xs text-gray-600 mt-1">
-                {link.price && <span className="text-green-600 font-medium mr-2">{link.price}</span>}
-                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">Product</span>
-              </div>
-            )}
-            {link.isEmbed && (
-              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded mt-1 inline-block">
-                {link.embedType === "collapsible" ? "Collapsible Embed" : "Video Embed"}
-              </span>
+        )}
+
+        {/* Link Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-medium text-gray-900 truncate">{link.title}</h4>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex-shrink-0">
+              {getLinkTypeLabel()}
+            </span>
+          </div>
+          
+          {link.description && (
+            <p className="text-sm text-gray-600 mb-1 line-clamp-1">{link.description}</p>
+          )}
+          
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <ExternalLink className="h-3 w-3" />
+              {link.clicks} clicks
+            </span>
+            {link.price && (
+              <span className="text-green-600 font-medium">{link.price}</span>
             )}
           </div>
         </div>
-        <div className="flex items-center">
-          <div className="mr-4 text-right hidden sm:block">
-            <p className="text-sm font-medium">{link.clicks}</p>
-            <p className="text-xs text-gray-500">clicks</p>
-          </div>
-          <div className="flex space-x-1">
-            <Button variant="ghost" size="sm" onClick={onEdit}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onDelete}>
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className="h-8 w-8 p-0"
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </Card>

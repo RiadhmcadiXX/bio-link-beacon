@@ -12,30 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Link2, 
-  Twitter, 
-  Youtube, 
-  Facebook, 
-  Instagram, 
-  Linkedin, 
-  Github, 
-  Globe,
-  Mail,
-  Phone,
-  ShoppingCart,
-  Package,
-  Video
-} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Link2, Package, Share2, Video } from "lucide-react";
 
 interface EditLinkDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  link: any;
   onSave: (link: any) => void;
+  link?: any;
 }
 
-export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialogProps) => {
+export const EditLinkDialog = ({ isOpen, onClose, onSave, link }: EditLinkDialogProps) => {
   const [formData, setFormData] = useState({
     id: "",
     title: "",
@@ -108,6 +95,18 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
 
   const handleEmbedTypeChange = (value: string) => {
     setFormData({ ...formData, embedType: value });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setFormData({ ...formData, imageUrl: result });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -196,26 +195,35 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{formData.id ? "Edit Link" : "Add New Link"}</DialogTitle>
+            <DialogTitle>{link ? "Edit Link" : "Add New Link"}</DialogTitle>
           </DialogHeader>
           
           <div className="py-4">
-            <Tabs 
-              value={activeTab} 
-              onValueChange={handleLinkTypeChange}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-4 mb-4">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="social">Social</TabsTrigger>
-                <TabsTrigger value="product">Product</TabsTrigger>
-                <TabsTrigger value="embed">Embed</TabsTrigger>
+            <Tabs value={formData.linkType} onValueChange={(value) => setFormData({ ...formData, linkType: value })}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="general" className="flex items-center gap-1">
+                  <Link2 className="h-4 w-4" />
+                  Link
+                </TabsTrigger>
+                <TabsTrigger value="product" className="flex items-center gap-1">
+                  <Package className="h-4 w-4" />
+                  Product
+                </TabsTrigger>
+                <TabsTrigger value="social" className="flex items-center gap-1">
+                  <Share2 className="h-4 w-4" />
+                  Social
+                </TabsTrigger>
+                <TabsTrigger value="embed" className="flex items-center gap-1">
+                  <Video className="h-4 w-4" />
+                  Embed
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="general" className="mt-0 space-y-4">
+              {/* General Link Tab */}
+              <TabsContent value="general" className="space-y-4 mt-4">
                 <div className="grid gap-2">
                   <Label htmlFor="title">Link Title</Label>
                   <Input
@@ -238,34 +246,42 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                     required
                   />
                 </div>
-              </TabsContent>
-
-              <TabsContent value="social" className="mt-0 space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="title">Profile Name</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={formData.title}
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
                     onChange={handleChange}
-                    placeholder="Twitter Profile"
-                    required
+                    placeholder="Brief description of your link..."
+                    rows={2}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="url">Profile URL</Label>
-                  <Input
-                    id="url"
-                    name="url"
-                    value={formData.url}
-                    onChange={handleChange}
-                    placeholder="https://twitter.com/username"
-                    required
-                  />
+                  <Label htmlFor="icon">Icon</Label>
+                  <Select
+                    value={formData.icon}
+                    onValueChange={handleIconChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an icon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getIconOptions().map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center">
+                            {option.icon}
+                            <span>{option.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </TabsContent>
 
-              <TabsContent value="product" className="mt-0 space-y-4">
+              {/* Product Tab */}
+              <TabsContent value="product" className="space-y-4 mt-4">
                 <div className="grid gap-2">
                   <Label htmlFor="title">Product Name</Label>
                   <Input
@@ -300,14 +316,32 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="imageUrl">Product Image URL</Label>
-                  <Input
-                    id="imageUrl"
-                    name="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={handleChange}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <Label htmlFor="imageUrl">Product Image</Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="imageUrl"
+                      name="imageUrl"
+                      value={formData.imageUrl}
+                      onChange={handleChange}
+                      placeholder="https://example.com/image.jpg or paste image URL"
+                    />
+                    <div className="text-sm text-gray-500">Or upload an image:</div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  {formData.imageUrl && (
+                    <div className="mt-2">
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Product preview" 
+                        className="w-20 h-20 object-cover rounded border"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="price">Price</Label>
@@ -321,7 +355,34 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                 </div>
               </TabsContent>
 
-              <TabsContent value="embed" className="mt-0 space-y-4">
+              {/* Social Tab */}
+              <TabsContent value="social" className="space-y-4 mt-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Profile Name</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Twitter Profile"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="url">Profile URL</Label>
+                  <Input
+                    id="url"
+                    name="url"
+                    value={formData.url}
+                    onChange={handleChange}
+                    placeholder="https://twitter.com/username"
+                    required
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Embed Tab */}
+              <TabsContent value="embed" className="space-y-4 mt-4">
                 <div className="grid gap-2">
                   <Label htmlFor="title">Video Title</Label>
                   <Input
@@ -374,28 +435,6 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
                 </div>
               </TabsContent>
             </Tabs>
-
-            <div className="grid gap-2 mt-4">
-              <Label htmlFor="icon">Icon</Label>
-              <Select
-                value={formData.icon}
-                onValueChange={handleIconChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an icon" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getIconOptions().map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center">
-                        {option.icon}
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <DialogFooter>
@@ -408,13 +447,10 @@ export const EditLinkDialog = ({ isOpen, onClose, link, onSave }: EditLinkDialog
             </Button>
             <Button 
               type="submit"
-              onClick={() => {
-                formData.url = validateUrl(formData.url);
-              }}
               className="bg-brand-purple hover:bg-brand-purple/90"
-              disabled={activeTab === "embed" && !isYouTubeUrl(formData.url)}
+              disabled={!formData.title || !formData.url}
             >
-              Save Link
+              {link ? "Update" : "Add"} Link
             </Button>
           </DialogFooter>
         </form>

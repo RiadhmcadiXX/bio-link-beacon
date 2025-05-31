@@ -1,4 +1,3 @@
-
 import React from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { 
@@ -340,6 +339,14 @@ export const ProfileLink = ({
               src={imageUrl} 
               alt={link.title} 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to package icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
+                const fallbackIcon = document.createElement('div');
+                fallbackIcon.innerHTML = '<svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>';
+                e.currentTarget.parentElement?.appendChild(fallbackIcon);
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
